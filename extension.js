@@ -14,6 +14,7 @@ function activate(context) {
 
   // Keep references to dispose dynamic items
   let dynamicButtons = []
+  let dynamicCommands = []
 
   // Function to clear dynamic buttons
   const clearDynamicButtons = () => {
@@ -22,7 +23,13 @@ function activate(context) {
         item.dispose()
       } catch {}
     }
+    for (const cmd of dynamicCommands) {
+      try {
+        cmd.dispose()
+      } catch {}
+    }
     dynamicButtons = []
+    dynamicCommands = []
   }
 
   // Function to build dynamic buttons from package.json scripts
@@ -39,9 +46,13 @@ function activate(context) {
     if (!fs.existsSync(packageJsonPath)) return
 
     try {
+      const cfg = getConfig()
+      const reuseTerminals = cfg.get('reuseTerminalForScripts', true)
+      const maxButtons = Math.max(0, parseInt(cfg.get('maxDynamicScriptButtons', 8))) || 8
+
       const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
       const scripts = pkg.scripts || {}
-      const exclude = new Set(getConfig().get('excludeScripts', []))
+      const exclude = new Set(cfg.get('excludeScripts', []))
       const entries = Object.entries(scripts).filter(([name]) => !exclude.has(name))
 
       // Sort scripts by common priorities (dev, start, build first), then alphabetically
@@ -50,7 +61,21 @@ function activate(context) {
 
       let basePriority = 110 // place dynamic after our existing default ones
 
-      for (const [name, cmd] of entries) {
+      // Build up to maxButtons as status bar items; others go to overflow
+      const visible = entries.slice(0, maxButtons)
+      const overflow = entries.slice(maxButtons)
+
+      const ensureTerminal = (name) => {
+        const termName = `npm:${name}`
+        if (reuseTerminals) {
+          let t = vscode.window.terminals.find((t) => t.name === termName)
+          if (!t) t = vscode.window.createTerminal(termName)
+          return t
+        }
+        return vscode.window.createTerminal(termName)
+      }
+
+      for (const [name, cmd] of visible) {
         const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, basePriority--)
         const icon = name.includes('dev') ? '$(play)' : name.includes('build') ? '$(gear)' : name.includes('start') ? '$(rocket)' : '$(terminal)'
         item.text = `${icon} ${name}`
@@ -59,19 +84,50 @@ function activate(context) {
         const commandId = `extension.runScript.${name}`
         const disposableCmd = vscode.commands.registerCommand(commandId, async () => {
           try {
-            const terminal = vscode.window.createTerminal(`npm:${name}`)
+            const terminal = ensureTerminal(name)
             terminal.show()
             terminal.sendText(`npm run ${name}`)
           } catch (error) {
             vscode.window.showErrorMessage(`Error running script ${name}: ${error.message}`)
           }
         })
+        dynamicCommands.push(disposableCmd)
         context.subscriptions.push(disposableCmd)
 
         item.command = commandId
         item.show()
         dynamicButtons.push(item)
         context.subscriptions.push(item)
+      }
+
+      // If there is overflow, add a single "+N" button that opens a quick pick list
+      if (overflow.length > 0) {
+        const overflowItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, basePriority--)
+        overflowItem.text = `$(ellipsis) +${overflow.length}`
+        overflowItem.tooltip = `More scripts`
+
+        const overflowCommandId = `extension.runScript._overflow`
+        const disposableOverflowCmd = vscode.commands.registerCommand(overflowCommandId, async () => {
+          try {
+            const picked = await vscode.window.showQuickPick(
+              overflow.map(([name, cmd]) => ({ label: name, description: cmd })),
+              { placeHolder: 'Select a script to run' }
+            )
+            if (!picked) return
+            const terminal = ensureTerminal(picked.label)
+            terminal.show()
+            terminal.sendText(`npm run ${picked.label}`)
+          } catch (error) {
+            vscode.window.showErrorMessage(`Error running script: ${error.message}`)
+          }
+        })
+        dynamicCommands.push(disposableOverflowCmd)
+        context.subscriptions.push(disposableOverflowCmd)
+
+        overflowItem.command = overflowCommandId
+        overflowItem.show()
+        dynamicButtons.push(overflowItem)
+        context.subscriptions.push(overflowItem)
       }
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to parse package.json scripts: ${e.message}`)
@@ -645,7 +701,9 @@ function activate(context) {
         e.affectsConfiguration('runScript.showStorybookButton') ||
         e.affectsConfiguration('runScript.showPrettierButton') ||
         e.affectsConfiguration('runScript.showPrettierCheckButton') ||
-        e.affectsConfiguration('runScript.excludeScripts')
+        e.affectsConfiguration('runScript.excludeScripts') ||
+        e.affectsConfiguration('runScript.maxDynamicScriptButtons') ||
+        e.affectsConfiguration('runScript.reuseTerminalForScripts')
       ) {
         applyVisibility()
       }

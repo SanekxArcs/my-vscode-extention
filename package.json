@@ -2,7 +2,7 @@
     "name": "dev-script",
     "displayName": "Dev Script",
     "description": "Custom dev script",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "local",
     "engines": {
         "vscode": "^1.60.0"
@@ -127,6 +127,17 @@
                     },
                     "default": ["test", "postinstall", "preinstall"],
                     "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
+                },
+                "runScript.maxDynamicScriptButtons": {
+                    "type": "number",
+                    "default": 8,
+                    "minimum": 0,
+                    "description": "Maximum number of scripts to show as status bar buttons when dynamic parsing is enabled. Remaining scripts are available via a '+N' overflow menu."
+                },
+                "runScript.reuseTerminalForScripts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
                 },
                 "runScript.viewportScreens": {
                     "type": "array",
