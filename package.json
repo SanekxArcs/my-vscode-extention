@@ -1,0 +1,189 @@
+{
+    "name": "dev-script",
+    "displayName": "Dev Script",
+    "description": "Custom dev script",
+    "version": "0.0.3",
+    "publisher": "local",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "workspaceContains:package.json",
+        "onCommand:extension.runDevScript",
+        "onCommand:extension.runStorybook",
+        "onCommand:extension.runPrettierActiveFile",
+        "onCommand:extension.runPrettierCheckActiveFile",
+        "onCommand:extension.convertToViewportUnit",
+        "onCommand:extension.reverseConvertFromViewportUnit"
+    ],
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.runDevScript",
+                "title": "Run Dev Script"
+            },
+            {
+                "command": "extension.runStorybook",
+                "title": "Run Storybook"
+            },
+            {
+                "command": "extension.runPrettierActiveFile",
+                "title": "Run Prettier on Active File"
+            },
+            {
+                "command": "extension.runPrettierCheckActiveFile",
+                "title": "Check Prettier on Active File"
+            },
+            {
+                "command": "extension.convertToViewportUnit",
+                "title": "Convert CSS unit to vw/vh"
+            },
+            {
+                "command": "extension.reverseConvertFromViewportUnit",
+                "title": "Convert vw/vh to px/rem"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "extension.convertToViewportUnit",
+                    "when": "editorTextFocus",
+                    "group": "navigation@9"
+                },
+                {
+                    "command": "extension.reverseConvertFromViewportUnit",
+                    "when": "editorTextFocus",
+                    "group": "navigation@10"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "extension.convertToViewportUnit",
+                "key": "ctrl+alt+v",
+                "mac": "cmd+alt+v",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.reverseConvertFromViewportUnit",
+                "key": "ctrl+alt+shift+v",
+                "mac": "cmd+alt+shift+v",
+                "when": "editorTextFocus"
+            }
+        ],
+        "codeActions": [
+            {
+                "languages": ["css", "scss", "sass", "less", "javascript", "typescript", "javascriptreact", "typescriptreact"],
+                "actions": [
+                    {
+                        "kind": "refactor.rewrite.viewport",
+                        "title": "Convert to vw/vh",
+                        "command": "extension.convertToViewportUnit"
+                    },
+                    {
+                        "kind": "refactor.rewrite.viewport.reverse",
+                        "title": "Convert vw/vh to px/rem",
+                        "command": "extension.reverseConvertFromViewportUnit"
+                    }
+                ]
+            }
+        ],
+        "configuration": {
+            "title": "Run Script Extension",
+            "properties": {
+                "runScript.useDynamicScriptParsing": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
+                },
+                "runScript.showDevButton": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the 'Run Dev' button in the status bar (only when dynamic parsing is off)"
+                },
+                "runScript.showStorybookButton": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the 'Run Storybook' button in the status bar (only when dynamic parsing is off)"
+                },
+                "runScript.showPrettierButton": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the 'Prettier (AF)' button in the status bar (only when dynamic parsing is off)"
+                },
+                "runScript.showPrettierCheckButton": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the 'Check Prettier' button in the status bar (only when dynamic parsing is off)"
+                },
+                "runScript.excludeScripts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": ["test", "postinstall", "preinstall"],
+                    "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
+                },
+                "runScript.viewportScreens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "360x800",
+                        "375x812",
+                        "390x844",
+                        "414x896",
+                        "428x926",
+                        "768x1024",
+                        "800x1280",
+                        "1024x1366",
+                        "1280x800",
+                        "1366x768",
+                        "1440x900",
+                        "1536x864",
+                        "1600x900",
+                        "1920x1080",
+                        "2160x1440",
+                        "2560x1440"
+                    ],
+                    "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion. Users can add or remove entries."
+                },
+                "runScript.baseFontSize": {
+                    "type": "number",
+                    "default": 16,
+                    "minimum": 1,
+                    "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
+                },
+                "runScript.viewportPrecision": {
+                    "type": "number",
+                    "default": 4,
+                    "minimum": 0,
+                    "maximum": 8,
+                    "description": "Number of decimal places to keep when converting to vw/vh."
+                },
+                "runScript.lastUsedViewportUnit": {
+                    "type": "string",
+                    "enum": ["vw", "vh"],
+                    "default": "vw",
+                    "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
+                },
+                "runScript.lastUsedScreen": {
+                    "type": "string",
+                    "default": "1440x900",
+                    "description": "Last used screen resolution - automatically updated when you convert."
+                },
+                "runScript.defaultOutputUnit": {
+                    "type": "string",
+                    "enum": ["px", "rem"],
+                    "default": "px",
+                    "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+                }
+            }
+        }
+    }
+}
