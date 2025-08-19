@@ -2,7 +2,7 @@
     "name": "dev-script",
     "displayName": "Dev Script",
     "description": "Custom dev script",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "local",
     "engines": {
         "vscode": "^1.60.0"
@@ -45,6 +45,14 @@
             {
                 "command": "extension.reverseConvertFromViewportUnit",
                 "title": "Convert vw/vh to px/rem"
+            },
+            {
+                "command": "extension.openCustomTerminals",
+                "title": "Open Custom Terminal Commands"
+            },
+            {
+                "command": "extension.runLastCustomTerminal",
+                "title": "Run Last Custom Terminal Command"
             }
         ],
         "menus": {
@@ -193,6 +201,40 @@
                     "enum": ["px", "rem"],
                     "default": "px",
                     "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+                },
+                "runScript.customTerminals": {
+                    "type": "array",
+                    "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{ \n  \"runScript.customTerminals\": [\n    { \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\" },\n    { \"title\": \"Storybook Clean\", \"command\": \"npm run sb:clean && npm run storybook\" }\n  ]\n}\n```",
+                    "default": [],
+                    "items": {
+                        "type": "object",
+                        "required": ["title", "command"],
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Status bar button title and terminal name"
+                            },
+                            "command": {
+                                "type": "string",
+                                "description": "The shell command to execute in a new terminal"
+                            }
+                        }
+                    }
+                },
+                "runScript.customTerminalsButtonLabel": {
+                    "type": "string",
+                    "default": "git-c",
+                    "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+                },
+                "runScript.pinLastCustomTerminal": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show a separate Status Bar button for the last selected custom command for quick re-run"
+                },
+                "runScript.pinLastCustomTerminalLabelPrefix": {
+                    "type": "string",
+                    "default": "★",
+                    "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
                 }
             }
         }
