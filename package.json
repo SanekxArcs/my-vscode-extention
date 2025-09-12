@@ -18,7 +18,12 @@
         "onCommand:extension.runPrettierCheckActiveFile",
         "onCommand:extension.convertToViewportUnit",
         "onCommand:extension.reverseConvertFromViewportUnit",
-        "onCommand:extension.cycleTailwindUnit"
+        "onCommand:extension.cycleTailwindUnit",
+        "onCommand:extension.viewportSettingsQuick",
+        "onCommand:extension.convertHereQuick",
+        "onCommand:extension.convertCycleVW",
+        "onCommand:extension.convertCycleVH",
+        "onCommand:extension.cycleViewportScreen"
     ],
     "main": "./extension.js",
     "contributes": {
@@ -50,6 +55,26 @@
             {
                 "command": "extension.cycleTailwindUnit",
                 "title": "Cycle px ↔ rem ↔ tw"
+            },
+            {
+                "command": "extension.viewportSettingsQuick",
+                "title": "Viewport Settings Quick"
+            },
+            {
+                "command": "extension.convertHereQuick",
+                "title": "Convert Here (to current viewport)"
+            },
+            {
+                "command": "extension.convertCycleVW",
+                "title": "Convert Cycle (vw)"
+            },
+            {
+                "command": "extension.convertCycleVH",
+                "title": "Convert Cycle (vh)"
+            },
+            {
+                "command": "extension.cycleViewportScreen",
+                "title": "Cycle Viewport Screen"
             },
             {
                 "command": "extension.openCustomTerminals",
@@ -91,6 +116,21 @@
                 "command": "extension.cycleTailwindUnit",
                 "key": "alt+z",
                 "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.convertCycleVW",
+                "key": "alt+v",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.convertCycleVH",
+                "key": "alt+h",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.cycleViewportScreen",
+                "key": "alt+x",
+                "when": "editorTextFocus || editorFocus"
             }
         ],
         "codeActions": [
@@ -211,6 +251,11 @@
                     "enum": ["px", "rem"],
                     "default": "px",
                     "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+                },
+                "runScript.autoDetectViewportAxis": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
                 },
                 "runScript.customTerminals": {
                     "type": "array",
