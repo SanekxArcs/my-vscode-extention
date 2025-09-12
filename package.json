@@ -57,6 +57,10 @@
                 "title": "Cycle Viewport Screen"
             },
             {
+                "command": "extension.stopRunningScripts",
+                "title": "Run Script: Stop Running Scripts"
+            },
+            {
                 "command": "extension.openCustomTerminals",
                 "title": "Open Custom Terminal Commands"
             },
@@ -187,6 +191,12 @@
                         "default": true,
                         "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
                     },
+                    "runScript.workspaceMode": {
+                        "type": "string",
+                        "enum": ["first", "pick", "all"],
+                        "default": "first",
+                        "description": "How to handle multi-root workspaces: first folder only, pick folder on run, or show all folders' scripts with prefixes."
+                    },
                     "runScript.excludeScripts": {
                         "type": "array",
                         "items": { "type": "string" },
@@ -203,6 +213,11 @@
                         "type": "boolean",
                         "default": true,
                         "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
+                    },
+                    "runScript.askBeforeKill": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Ask for confirmation before stopping an already running script when re-running via Tasks API."
                     }
                 }
             },
