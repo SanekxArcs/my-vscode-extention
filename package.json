@@ -274,6 +274,11 @@
                         "minimum": 0,
                         "description": "Number of last executed custom commands to persist for quick rerun"
                     },
+                    "runScript.confirmDangerousCommands": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Ask for confirmation when a custom command looks dangerous (e.g., git reset --hard, git clean -fd, git push -f)"
+                    },
                     "runScript.pinLastCustomTerminal": {
                         "type": "boolean",
                         "default": false,

@@ -1,131 +1,92 @@
 # Dev Script — VS Code Extension
 
-A productivity-focused VS Code extension that helps you quickly run common npm scripts from the status bar, format the active file with Prettier, and convert CSS units between px/rem and vw/vh with handy code actions, context menu items, and keybindings.
+Quickly run package scripts, manage custom terminal snippets with placeholders, and convert CSS units. Dynamic script buttons, multi-root support, package manager auto-detection, and a powerful custom terminal system are included.
 
 ## Highlights
-- Status bar buttons to run Dev, Storybook, and Prettier commands.
-- Optional dynamic parsing of your workspace package.json to create status bar buttons for all scripts (with exclusions).
-- CSS unit converter:
-  - px/rem → vw/vh
-  - vw/vh → px/rem
-  - Works via selection or cursor position, supports multi-selections.
-  - Code actions appear contextually when the cursor is on a value.
-- Editor context menu entries and convenient keybindings.
-
-## Requirements
-- VS Code: ^1.60.0
-- Node.js and npm available in your PATH (for running scripts and npx prettier).
-- A workspace with a package.json (the extension auto-activates when one is present).
-- For best Prettier results, ensure your project has a Prettier configuration, or rely on npx defaults.
+- Dynamic status bar buttons from package.json scripts (with exclusions)
+- Tasks API execution with stop/restart and confirmation prompts
+- Auto-detect npm/pnpm/yarn/bun and run with the right CLI
+- Multi-root aware: first | pick | all modes
+- Custom terminal snippets with placeholders, cursor mode, preview, reuse, OS filters, and history
+- CSS unit converter (px/rem ↔ vw/vh) via actions and keybindings
 
 ## Activation
-The extension activates when:
-- Your workspace contains a package.json, or
-- You invoke any of the provided commands (see Commands section).
+- Auto-activates when a workspace contains a package.json
+- Or when any extension command is executed
 
-## Commands
-- Run Dev Script: extension.runDevScript
-- Run Storybook: extension.runStorybook
-- Run Prettier on Active File: extension.runPrettierActiveFile
-- Check Prettier on Active File: extension.runPrettierCheckActiveFile
-- Convert CSS unit to vw/vh: extension.convertToViewportUnit
-- Convert vw/vh to px/rem: extension.reverseConvertFromViewportUnit
+## Dynamic Scripts
+- Enabled by default via `runScript.useDynamicScriptParsing`
+- Buttons are generated from `scripts` in package.json
+- Sorting prioritizes `dev`, `start`, `build`, then alphabetical
+- Uses VS Code Tasks API; prior runs are stopped (with optional confirmation) before re-run
+- Watches package.json changes and rebuilds automatically
+- Multi-root modes (`runScript.workspaceMode`):
+  - `first`: only first folder
+  - `pick`: union by name, pick folder on run
+  - `all`: show all with `[folder]` prefix
 
-You can run these via the Command Palette (Ctrl/Cmd+Shift+P) by typing the command title.
+## Package Manager Detection
+- Reads `packageManager` field and lockfiles to choose npm/pnpm/yarn/bun
+- Commands executed accordingly (e.g., `yarn dev`, `pnpm run build`)
 
-## Status Bar Buttons
-- Run Dev ("$(play) Run Dev"): Runs npm run dev in a new terminal.
-  - Special handling: If your dev script contains "npm run node-version:check", the extension temporarily replaces the dev script with "next dev" to bypass the check, runs it, and restores the original line after ~10 seconds.
-- Run SB ("$(book) Run SB"): Runs npm run storybook.
-- Prettier (AF) ("$(sparkle) Prettier (AF)"): Runs npx prettier --write on the active file.
-- Check ("$(check) Check"): Runs npx prettier --check on the active file.
+## Custom Terminal Snippets
+Define entries in `runScript.customTerminals`:
+- Placeholders:
+  - `${input:Label}` → prompt for text
+  - `${pick:Label|opt1|opt2}` → QuickPick
+  - `${env:VAR}` → environment variable
+  - `${workspaceFolder}`, `${clipboard}`
+- Cursor marker: `runScript.cursorSymbol` (default `<|>`)
+  - If present, the part before the marker is inserted without Enter
+  - Use command “Custom Terminal: Finish Snippet” to append the tail and execute
+- Terminal reuse by title: `runScript.reuseTerminalByTitle` (or per snippet `reuse`)
+- Per-snippet `cwd` and `os` filters (win32|darwin|linux)
+- Optional preview before run: `runScript.showPreviewForCustomTerminals`
+- Dangerous command confirmation: `runScript.confirmDangerousCommands`
+  - Prompts on commands like `git reset --hard`, `git clean -fd`, `git push -f`
+- History: last N (`runScript.customHistorySize`) entries, command “Custom Terminal: History”
+- Pin last command: `runScript.pinLastCustomTerminal` shows a dedicated status bar item
 
-Visibility of these buttons can be customized via settings. If dynamic parsing is enabled (see below), built-in buttons are hidden and replaced with automatically generated ones.
-
-## Dynamic Script Parsing (Optional)
-When enabled, the extension scans your workspace package.json and creates a status bar button for each script (excluding those you choose to exclude). Scripts are sorted so that common ones like dev, start, and build appear first, then the rest alphabetically.
-- Icons try to match intent: dev → play, build → gear, start → rocket, others → terminal.
-- Clicking a button runs npm run <script> in a new terminal.
+Example:
+```
+"runScript.customTerminals": [
+  { "title": "Git commit", "command": "git commit -m \"<|>\"" },
+  { "title": "Docker tag", "command": "docker tag ${input:source} ${input:target}" },
+  { "title": "NPM run", "command": "npm run ${pick:script|build|test|lint}" },
+  { "title": "Open folder", "command": "code ${workspaceFolder}" },
+  { "title": "Echo clip", "command": "echo ${clipboard}" }
+]
+```
 
 ## CSS Unit Conversion
-Convert CSS values between px/rem and vw/vh with a guided Quick Pick flow.
-- px/rem → vw/vh: Choose vw or vh, then pick a target screen size (WIDTHxHEIGHT), and the extension will convert selected values or the value under your cursor.
-- vw/vh → px/rem: Choose source unit (vw/vh), pick the screen size, then choose output unit (px/rem).
-- Multi-selections are supported, and trailing zeros are trimmed for clean results.
-- Screen list, base font size (for rem), and precision are all configurable.
+- Convert px/rem ↔ vw/vh with QuickPick flows
+- Code actions appear contextually on values; supports multi-selections
+- Configure screen list, base font size (rem), and precision
 
-Contextual Code Actions will appear when your cursor is on a value like 16px, 1.5rem, 10vw, or 25vh.
+## Commands
+- Dynamic scripts run via status bar buttons
+- Convert CSS unit to vw/vh: `extension.convertToViewportUnit`
+- Convert vw/vh to px/rem: `extension.reverseConvertFromViewportUnit`
+- Open Custom Terminal Commands: `extension.openCustomTerminals`
+- Run Last Custom Terminal Command: `extension.runLastCustomTerminal`
+- Custom Terminal: Finish Snippet: `extension.customTerminal.finishSnippet`
+- Custom Terminal: History: `extension.customTerminal.history`
+- Run Script: Stop Running Scripts: `extension.stopRunningScripts`
 
-## Editor Context Menu
-In the editor context menu (right-click in code), you’ll find:
-- Convert CSS unit to vw/vh
-- Convert vw/vh to px/rem
-
-## Keybindings
-- Convert to vw/vh: Ctrl+Alt+V (macOS: Cmd+Alt+V)
-- Convert vw/vh to px/rem: Ctrl+Alt+Shift+V (macOS: Cmd+Alt+Shift+V)
-
-## Settings
-All settings live under the runScript.* namespace.
-
-- runScript.useDynamicScriptParsing (boolean, default: false)
-  - Enable dynamic parsing of all package.json scripts as status bar buttons.
-  - Disables the custom Dev/Storybook/Prettier buttons when enabled.
-
-- runScript.showDevButton (boolean, default: true)
-  - Show the "Run Dev" status bar button (only when dynamic parsing is off).
-
-- runScript.showStorybookButton (boolean, default: true)
-  - Show the "Run Storybook" status bar button (only when dynamic parsing is off).
-
-- runScript.showPrettierButton (boolean, default: true)
-  - Show the "Prettier (AF)" status bar button (only when dynamic parsing is off).
-
-- runScript.showPrettierCheckButton (boolean, default: true)
-  - Show the "Check Prettier" status bar button (only when dynamic parsing is off).
-
-- runScript.excludeScripts (array of strings, default: ["test", "postinstall", "preinstall"])
-  - Scripts to exclude when dynamic parsing is enabled.
-
-- runScript.viewportScreens (array of strings, default: common sizes like "1440x900", "1920x1080", etc.)
-  - List of target screens in WIDTHxHEIGHT format for conversions. You can add/remove entries.
-
-- runScript.baseFontSize (number, default: 16)
-  - Base font size in pixels used for rem ↔ px conversion (1rem = baseFontSize px).
-
-- runScript.viewportPrecision (number, default: 4)
-  - Number of decimal places to keep when converting to vw/vh.
-
-- runScript.lastUsedViewportUnit (string, enum: "vw" | "vh", default: "vw")
-  - Tracks your last used viewport unit, updated automatically after conversions.
-
-- runScript.lastUsedScreen (string, default: "1440x900")
-  - Tracks your last used screen size, updated automatically after conversions.
-
-- runScript.defaultOutputUnit (string, enum: "px" | "rem", default: "px")
-  - Default unit when converting vw/vh back to px/rem.
-
-## Usage Examples
-- Run Dev: Click the "Run Dev" status bar button or run "Run Dev Script" from the Command Palette.
-- Run Storybook: Click the "Run SB" status bar button or run "Run Storybook".
-- Format Active File: Click "Prettier (AF)" or run "Run Prettier on Active File".
-- Check Active File with Prettier: Click "Check" or run "Check Prettier on Active File".
-- Convert 16px to vw: Select "16px" (or place cursor on it), run "Convert CSS unit to vw/vh", pick "vw", choose a screen like 1440x900.
-- Convert 10vw to rem: Select "10vw" (or place cursor on it), run "Convert vw/vh to px/rem", choose the screen and output unit "rem".
-
-## Notes and Limitations
-- The Dev script helper temporarily edits your package.json when it detects "npm run node-version:check" in the dev script. The original line is restored automatically after ~10 seconds.
-- Conversions operate on a single numeric token at a time; complex expressions (e.g., calc()) are not parsed.
-- Dynamic parsing only appears when a package.json is present in the first workspace folder.
+## Key Settings
+- `runScript.useDynamicScriptParsing`: enable dynamic script buttons
+- `runScript.workspaceMode`: `first` | `pick` | `all`
+- `runScript.excludeScripts`, `runScript.maxDynamicScriptButtons`
+- `runScript.askBeforeKill`: confirm before stopping an already running task
+- `runScript.cursorSymbol`, `runScript.reuseTerminalByTitle`, `runScript.showPreviewForCustomTerminals`, `runScript.customHistorySize`, `runScript.confirmDangerousCommands`
 
 ## Troubleshooting
-- "No workspace folder found" / "package.json not found": Open a folder containing a package.json.
-- Prettier command errors: Ensure Node.js/npm is installed and accessible, and that npx can run Prettier. Optionally add Prettier to your devDependencies.
-- "No screens configured": Add entries to runScript.viewportScreens in settings, formatted as WIDTHxHEIGHT (e.g., 1440x900).
+- Ensure a package.json exists in the workspace (for dynamic scripts)
+- Verify Node/PM in PATH for running scripts
+- If scripts don’t appear, check exclude list and watch for errors in the Output panel
 
-## Local Development
-- Open this folder in VS Code and press F5 to launch an Extension Development Host to test the extension.
-- Inspect and tweak behavior in extension.js and package.json.
+## Development
+- Open the folder in VS Code and press F5 to launch an Extension Development Host
+- Code resides mainly in `src/scripts.js` and `src/gitShortcuts.js`
 
----
-Enjoy faster script running and effortless CSS unit conversions!
+Enjoy fast script running and powerful terminal snippets!

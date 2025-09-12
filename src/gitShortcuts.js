@@ -3,7 +3,8 @@ const { getConfig } = require('./config')
 
 function shellEscapePosix(s) {
   if (s == null) return ''
-  return `'${String(s).replace(/'/g, `'+"'"+'`)}'`
+  const val = String(s)
+  return `'${val.replace(/'/g, `'\\''`)}'`
 }
 
 function normalizeOs(os) {
@@ -17,6 +18,22 @@ function registerGitShortcuts(context) {
   let customCommands = []
   let finishStatusItem = null
   let pendingSnippet = null // { terminal, suffix }
+  
+  const needsConfirmation = (cmd) => {
+    if (!cmd) return false
+    const c = cmd.toLowerCase()
+    if (/git\s+reset\s+--hard/.test(c)) return true
+    if (/git\s+clean[\s\S]*(-fd|--force)/.test(c)) return true
+    if (/git\s+push[\s\S]*\s(-f|--force)(\s|$)/.test(c)) return true
+    return false
+  }
+  const confirmDangerousIfNeeded = async (cmd) => {
+    const cfg = getConfig()
+    if (!cfg.get('confirmDangerousCommands', true)) return true
+    if (!needsConfirmation(cmd)) return true
+    const answer = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'This command looks dangerous. Continue?' })
+    return answer === 'Yes'
+  }
 
   const clearCustomButtons = () => {
     for (const item of customButtons) { try { item.dispose() } catch {} }
@@ -145,6 +162,7 @@ function registerGitShortcuts(context) {
         }
         finishStatusItem.show()
       } else {
+        if (!(await confirmDangerousIfNeeded(result))) return
         if (!(await showPreviewIfNeeded(result))) return
         terminal.sendText(result)
         await pushHistory(title, result)
@@ -221,6 +239,7 @@ function registerGitShortcuts(context) {
     if (!pendingSnippet) { vscode.window.showInformationMessage('No pending snippet.'); return }
     try {
       const { terminal, suffix } = pendingSnippet
+      if (!(await confirmDangerousIfNeeded(suffix))) return
       terminal.sendText(suffix)
     } finally {
       pendingSnippet = null
@@ -262,7 +281,8 @@ function registerGitShortcuts(context) {
       e.affectsConfiguration('runScript.cursorSymbol') ||
       e.affectsConfiguration('runScript.showPreviewForCustomTerminals') ||
       e.affectsConfiguration('runScript.reuseTerminalByTitle') ||
-      e.affectsConfiguration('runScript.customHistorySize')
+      e.affectsConfiguration('runScript.customHistorySize') ||
+      e.affectsConfiguration('runScript.confirmDangerousCommands')
     ) {
       buildCustomTerminalButtons()
     }
