@@ -67,6 +67,14 @@
             {
                 "command": "extension.runLastCustomTerminal",
                 "title": "Run Last Custom Terminal Command"
+            },
+            {
+                "command": "extension.customTerminal.finishSnippet",
+                "title": "Custom Terminal: Finish Snippet"
+            },
+            {
+                "command": "extension.customTerminal.history",
+                "title": "Custom Terminal: History"
             }
         ],
         "menus": {
@@ -233,7 +241,10 @@
                             "required": ["title", "command"],
                             "properties": {
                                 "title": { "type": "string", "description": "Status bar button title and terminal name" },
-                                "command": { "type": "string", "description": "The shell command to execute in a new terminal" }
+                                "command": { "type": "string", "markdownDescription": "Shell snippet with placeholders: ${input:Label}, ${pick:Label|opt1|opt2}, ${env:VAR}, ${workspaceFolder}, ${clipboard}. Cursor marker via runScript.cursorSymbol, default '<|>'." },
+                                "cwd": { "type": "string", "description": "Working directory for the terminal (optional)" },
+                                "reuse": { "type": "boolean", "description": "Reuse terminal by title for this snippet (overrides global setting)" },
+                                "os": { "type": ["string", "array"], "description": "Limit snippet to OS: win32|darwin|linux or array of them" }
                             }
                         }
                     },
@@ -241,6 +252,27 @@
                         "type": "string",
                         "default": "git-c",
                         "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+                    },
+                    "runScript.cursorSymbol": {
+                        "type": "string",
+                        "default": "<|>",
+                        "description": "Marker placed inside a snippet to indicate cursor position for manual input in terminal"
+                    },
+                    "runScript.showPreviewForCustomTerminals": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Show a modal preview of the final command before running (prompt mode)"
+                    },
+                    "runScript.reuseTerminalByTitle": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Reuse an existing terminal matched by the snippet title"
+                    },
+                    "runScript.customHistorySize": {
+                        "type": "number",
+                        "default": 10,
+                        "minimum": 0,
+                        "description": "Number of last executed custom commands to persist for quick rerun"
                     },
                     "runScript.pinLastCustomTerminal": {
                         "type": "boolean",
