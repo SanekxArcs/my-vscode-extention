@@ -17,7 +17,8 @@
         "onCommand:extension.runPrettierActiveFile",
         "onCommand:extension.runPrettierCheckActiveFile",
         "onCommand:extension.convertToViewportUnit",
-        "onCommand:extension.reverseConvertFromViewportUnit"
+        "onCommand:extension.reverseConvertFromViewportUnit",
+        "onCommand:extension.cycleTailwindUnit"
     ],
     "main": "./extension.js",
     "contributes": {
@@ -45,6 +46,10 @@
             {
                 "command": "extension.reverseConvertFromViewportUnit",
                 "title": "Convert vw/vh to px/rem"
+            },
+            {
+                "command": "extension.cycleTailwindUnit",
+                "title": "Cycle px ↔ rem ↔ tw"
             },
             {
                 "command": "extension.openCustomTerminals",
@@ -80,6 +85,11 @@
                 "command": "extension.reverseConvertFromViewportUnit",
                 "key": "ctrl+alt+shift+v",
                 "mac": "cmd+alt+shift+v",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.cycleTailwindUnit",
+                "key": "alt+z",
                 "when": "editorTextFocus"
             }
         ],
