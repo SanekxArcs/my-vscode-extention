@@ -12,10 +12,6 @@
     ],
     "activationEvents": [
         "workspaceContains:package.json",
-        "onCommand:extension.runDevScript",
-        "onCommand:extension.runStorybook",
-        "onCommand:extension.runPrettierActiveFile",
-        "onCommand:extension.runPrettierCheckActiveFile",
         "onCommand:extension.convertToViewportUnit",
         "onCommand:extension.reverseConvertFromViewportUnit",
         "onCommand:extension.cycleTailwindUnit",
@@ -28,22 +24,6 @@
     "main": "./extension.js",
     "contributes": {
         "commands": [
-            {
-                "command": "extension.runDevScript",
-                "title": "Run Dev Script"
-            },
-            {
-                "command": "extension.runStorybook",
-                "title": "Run Storybook"
-            },
-            {
-                "command": "extension.runPrettierActiveFile",
-                "title": "Run Prettier on Active File"
-            },
-            {
-                "command": "extension.runPrettierCheckActiveFile",
-                "title": "Check Prettier on Active File"
-            },
             {
                 "command": "extension.convertToViewportUnit",
                 "title": "Convert CSS unit to vw/vh"
@@ -150,148 +130,115 @@
                 ]
             }
         ],
-        "configuration": {
-            "title": "Run Script Extension",
-            "properties": {
-                "runScript.useDynamicScriptParsing": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
-                },
-                "runScript.showDevButton": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the 'Run Dev' button in the status bar (only when dynamic parsing is off)"
-                },
-                "runScript.showStorybookButton": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the 'Run Storybook' button in the status bar (only when dynamic parsing is off)"
-                },
-                "runScript.showPrettierButton": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the 'Prettier (AF)' button in the status bar (only when dynamic parsing is off)"
-                },
-                "runScript.showPrettierCheckButton": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the 'Check Prettier' button in the status bar (only when dynamic parsing is off)"
-                },
-                "runScript.excludeScripts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+        "configuration": [
+            {
+                "title": "Run Script: Conversion",
+                "properties": {
+                    "runScript.viewportScreens": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "default": [
+                            "360x800","375x812","390x844","414x896","428x926","768x1024","800x1280","1024x1366","1280x800","1366x768","1440x900","1536x864","1600x900","1920x1080","2160x1440","2560x1440"
+                        ],
+                        "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion. Users can add or remove entries."
                     },
-                    "default": ["test", "postinstall", "preinstall"],
-                    "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
-                },
-                "runScript.maxDynamicScriptButtons": {
-                    "type": "number",
-                    "default": 8,
-                    "minimum": 0,
-                    "description": "Maximum number of scripts to show as status bar buttons when dynamic parsing is enabled. Remaining scripts are available via a '+N' overflow menu."
-                },
-                "runScript.reuseTerminalForScripts": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
-                },
-                "runScript.viewportScreens": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+                    "runScript.baseFontSize": {
+                        "type": "number",
+                        "default": 16,
+                        "minimum": 1,
+                        "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
                     },
-                    "default": [
-                        "360x800",
-                        "375x812",
-                        "390x844",
-                        "414x896",
-                        "428x926",
-                        "768x1024",
-                        "800x1280",
-                        "1024x1366",
-                        "1280x800",
-                        "1366x768",
-                        "1440x900",
-                        "1536x864",
-                        "1600x900",
-                        "1920x1080",
-                        "2160x1440",
-                        "2560x1440"
-                    ],
-                    "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion. Users can add or remove entries."
-                },
-                "runScript.baseFontSize": {
-                    "type": "number",
-                    "default": 16,
-                    "minimum": 1,
-                    "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
-                },
-                "runScript.viewportPrecision": {
-                    "type": "number",
-                    "default": 4,
-                    "minimum": 0,
-                    "maximum": 8,
-                    "description": "Number of decimal places to keep when converting to vw/vh."
-                },
-                "runScript.lastUsedViewportUnit": {
-                    "type": "string",
-                    "enum": ["vw", "vh"],
-                    "default": "vw",
-                    "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
-                },
-                "runScript.lastUsedScreen": {
-                    "type": "string",
-                    "default": "1440x900",
-                    "description": "Last used screen resolution - automatically updated when you convert."
-                },
-                "runScript.defaultOutputUnit": {
-                    "type": "string",
-                    "enum": ["px", "rem"],
-                    "default": "px",
-                    "description": "Default unit for reverse conversion (vw/vh to px or rem)."
-                },
-                "runScript.autoDetectViewportAxis": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
-                },
-                "runScript.customTerminals": {
-                    "type": "array",
-                    "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{ \n  \"runScript.customTerminals\": [\n    { \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\" },\n    { \"title\": \"Storybook Clean\", \"command\": \"npm run sb:clean && npm run storybook\" }\n  ]\n}\n```",
-                    "default": [],
-                    "items": {
-                        "type": "object",
-                        "required": ["title", "command"],
-                        "properties": {
-                            "title": {
-                                "type": "string",
-                                "description": "Status bar button title and terminal name"
-                            },
-                            "command": {
-                                "type": "string",
-                                "description": "The shell command to execute in a new terminal"
+                    "runScript.viewportPrecision": {
+                        "type": "number",
+                        "default": 4,
+                        "minimum": 0,
+                        "maximum": 8,
+                        "description": "Number of decimal places to keep when converting to vw/vh."
+                    },
+                    "runScript.defaultOutputUnit": {
+                        "type": "string",
+                        "enum": ["px", "rem"],
+                        "default": "px",
+                        "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+                    },
+                    "runScript.autoDetectViewportAxis": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
+                    },
+                    "runScript.lastUsedViewportUnit": {
+                        "type": "string",
+                        "enum": ["vw", "vh"],
+                        "default": "vw",
+                        "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
+                    },
+                    "runScript.lastUsedScreen": {
+                        "type": "string",
+                        "default": "1440x900",
+                        "description": "Last used screen resolution - automatically updated when you convert."
+                    }
+                }
+            },
+            {
+                "title": "Run Script: Script Scan & Buttons",
+                "properties": {
+                    "runScript.useDynamicScriptParsing": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
+                    },
+                    "runScript.excludeScripts": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "default": ["test", "postinstall", "preinstall"],
+                        "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
+                    },
+                    "runScript.maxDynamicScriptButtons": {
+                        "type": "number",
+                        "default": 8,
+                        "minimum": 0,
+                        "description": "Maximum number of scripts to show as status bar buttons when dynamic parsing is enabled. Remaining scripts are available via a '+N' overflow menu."
+                    },
+                    "runScript.reuseTerminalForScripts": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
+                    }
+                }
+            },
+            {
+                "title": "Run Script: Saved Scripts",
+                "properties": {
+                    "runScript.customTerminals": {
+                        "type": "array",
+                        "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{ \n  \"runScript.customTerminals\": [\n    { \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\" },\n    { \"title\": \"Storybook Clean\", \"command\": \"npm run sb:clean && npm run storybook\" }\n  ]\n}\n```",
+                        "default": [],
+                        "items": {
+                            "type": "object",
+                            "required": ["title", "command"],
+                            "properties": {
+                                "title": { "type": "string", "description": "Status bar button title and terminal name" },
+                                "command": { "type": "string", "description": "The shell command to execute in a new terminal" }
                             }
                         }
+                    },
+                    "runScript.customTerminalsButtonLabel": {
+                        "type": "string",
+                        "default": "git-c",
+                        "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+                    },
+                    "runScript.pinLastCustomTerminal": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Show a separate Status Bar button for the last selected custom command for quick re-run"
+                    },
+                    "runScript.pinLastCustomTerminalLabelPrefix": {
+                        "type": "string",
+                        "default": "★",
+                        "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
                     }
-                },
-                "runScript.customTerminalsButtonLabel": {
-                    "type": "string",
-                    "default": "git-c",
-                    "description": "Status Bar button label that opens the saved custom commands Quick Pick"
-                },
-                "runScript.pinLastCustomTerminal": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Show a separate Status Bar button for the last selected custom command for quick re-run"
-                },
-                "runScript.pinLastCustomTerminalLabelPrefix": {
-                    "type": "string",
-                    "default": "★",
-                    "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
                 }
             }
-        }
+        ]
     }
 }

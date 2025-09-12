@@ -8,29 +8,7 @@ function ensureWorkspaceFolder() {
 }
 
 function registerScriptCommands(context) {
-  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100)
-  statusBarItem.text = '$(play) Run Dev'
-  statusBarItem.tooltip = 'Run Dev S'
-  statusBarItem.command = 'extension.runDevScript'
-  context.subscriptions.push(statusBarItem)
-
-  const storybookStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99)
-  storybookStatusBarItem.text = '$(book) Run SB'
-  storybookStatusBarItem.tooltip = 'Run SB'
-  storybookStatusBarItem.command = 'extension.runStorybook'
-  context.subscriptions.push(storybookStatusBarItem)
-
-  const prettierStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98)
-  prettierStatusBarItem.text = '$(sparkle) Prettier (AF)'
-  prettierStatusBarItem.tooltip = 'Run Prettier on current active file'
-  prettierStatusBarItem.command = 'extension.runPrettierActiveFile'
-  context.subscriptions.push(prettierStatusBarItem)
-
-  const prettierCheckStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 97)
-  prettierCheckStatusBarItem.text = '$(check) Check '
-  prettierCheckStatusBarItem.tooltip = 'Check Prettier formatting on current active file'
-  prettierCheckStatusBarItem.command = 'extension.runPrettierCheckActiveFile'
-  context.subscriptions.push(prettierCheckStatusBarItem)
+  // Only dynamic status bar buttons are supported. Static buttons removed.
 
   let dynamicButtons = []
   let dynamicCommands = []
@@ -44,7 +22,7 @@ function registerScriptCommands(context) {
 
   const buildDynamicButtons = () => {
     clearDynamicButtons()
-    const useDynamic = getConfig().get('useDynamicScriptParsing', false)
+    const useDynamic = getConfig().get('useDynamicScriptParsing', true)
     if (!useDynamic) return
 
     const workspaceFolder = ensureWorkspaceFolder()
@@ -73,10 +51,10 @@ function registerScriptCommands(context) {
         const termName = `npm:${name}`
         if (reuseTerminals) {
           let t = vscode.window.terminals.find((t) => t.name === termName)
-          if (!t) t = vscode.window.createTerminal(termName)
+          if (!t) t = vscode.window.createTerminal({ name: termName, cwd: workspaceFolder.uri.fsPath })
           return t
         }
-        return vscode.window.createTerminal(termName)
+        return vscode.window.createTerminal({ name: termName, cwd: workspaceFolder.uri.fsPath })
       }
 
       for (const [name, cmd] of visible) {
@@ -90,7 +68,11 @@ function registerScriptCommands(context) {
           try {
             const terminal = ensureTerminal(name)
             terminal.show()
-            terminal.sendText(`npm run ${name}`)
+            // Try to stop any running process, then run again from workspace root
+            terminal.sendText("\x03")
+            setTimeout(() => {
+              terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && npm run ${name}`)
+            }, 250)
           } catch (error) {
             vscode.window.showErrorMessage(`Error running script ${name}: ${error.message}`)
           }
@@ -119,7 +101,10 @@ function registerScriptCommands(context) {
             if (!picked) return
             const terminal = ensureTerminal(picked.label)
             terminal.show()
-            terminal.sendText(`npm run ${picked.label}`)
+            terminal.sendText("\x03")
+            setTimeout(() => {
+              terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && npm run ${picked.label}`)
+            }, 250)
           } catch (error) {
             vscode.window.showErrorMessage(`Error running script: ${error.message}`)
           }
@@ -138,19 +123,11 @@ function registerScriptCommands(context) {
   }
 
   const applyVisibility = () => {
-    const useDynamic = getConfig().get('useDynamicScriptParsing', false)
+    const useDynamic = getConfig().get('useDynamicScriptParsing', true)
     if (useDynamic) {
-      statusBarItem.hide()
-      storybookStatusBarItem.hide()
-      prettierStatusBarItem.hide()
-      prettierCheckStatusBarItem.hide()
       buildDynamicButtons()
     } else {
       clearDynamicButtons()
-      getConfig().get('showDevButton', true) ? statusBarItem.show() : statusBarItem.hide()
-      getConfig().get('showStorybookButton', true) ? storybookStatusBarItem.show() : storybookStatusBarItem.hide()
-      getConfig().get('showPrettierButton', true) ? prettierStatusBarItem.show() : prettierStatusBarItem.hide()
-      getConfig().get('showPrettierCheckButton', true) ? prettierCheckStatusBarItem.show() : prettierCheckStatusBarItem.hide()
     }
   }
 
@@ -267,10 +244,6 @@ function registerScriptCommands(context) {
   const onConfigChange = vscode.workspace.onDidChangeConfiguration((e) => {
     if (
       e.affectsConfiguration('runScript.useDynamicScriptParsing') ||
-      e.affectsConfiguration('runScript.showDevButton') ||
-      e.affectsConfiguration('runScript.showStorybookButton') ||
-      e.affectsConfiguration('runScript.showPrettierButton') ||
-      e.affectsConfiguration('runScript.showPrettierCheckButton') ||
       e.affectsConfiguration('runScript.excludeScripts') ||
       e.affectsConfiguration('runScript.maxDynamicScriptButtons') ||
       e.affectsConfiguration('runScript.reuseTerminalForScripts')
