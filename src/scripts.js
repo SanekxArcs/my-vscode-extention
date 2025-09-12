@@ -22,16 +22,19 @@ async function readPackageJson(uri) {
   }
 }
 
-function detectPM(root, pkg) {
+async function detectPM(root, pkg) {
   const pmField = pkg?.packageManager
   if (typeof pmField === 'string') {
     if (pmField.startsWith('pnpm')) return 'pnpm'
     if (pmField.startsWith('yarn')) return 'yarn'
     if (pmField.startsWith('bun')) return 'bun'
   }
-  if (fs.existsSync(path.join(root, 'pnpm-lock.yaml'))) return 'pnpm'
-  if (fs.existsSync(path.join(root, 'yarn.lock'))) return 'yarn'
-  if (fs.existsSync(path.join(root, 'bun.lockb'))) return 'bun'
+  const tryStat = async (p) => {
+    try { await vscode.workspace.fs.stat(vscode.Uri.file(p)); return true } catch { return false }
+  }
+  if (await tryStat(path.join(root, 'pnpm-lock.yaml'))) return 'pnpm'
+  if (await tryStat(path.join(root, 'yarn.lock'))) return 'yarn'
+  if (await tryStat(path.join(root, 'bun.lockb'))) return 'bun'
   return 'npm'
 }
 
@@ -103,8 +106,9 @@ function registerScriptCommands(context) {
     const folders = getWorkspaceFolders()
     if (!folders.length) return
 
-    const exclude = new Set(cfg.get('excludeScripts', []))
-    const maxButtons = Math.max(0, parseInt(cfg.get('maxDynamicScriptButtons', 8))) || 8
+  const exclude = new Set(cfg.get('excludeScripts', []))
+  const maxCfg = cfg.get('maxDynamicScriptButtons', 8)
+  const maxButtons = Math.max(0, Number(maxCfg)) || 8
 
     const priority = { dev: 3, start: 2, build: 1 }
     const isAll = workspaceMode === 'all'
@@ -116,7 +120,7 @@ function registerScriptCommands(context) {
       const pkgUri = vscode.Uri.joinPath(f.uri, 'package.json')
       const pkg = await readPackageJson(pkgUri)
       if (!pkg) return
-      const pm = detectPM(f.uri.fsPath, pkg)
+  const pm = await detectPM(f.uri.fsPath, pkg)
       const scripts = Object.entries(pkg.scripts || {}).filter(([name]) => !exclude.has(name))
       scripts.sort((a, b) => (priority[b[0]] || 0) - (priority[a[0]] || 0) || a[0].localeCompare(b[0]))
       for (const [name, cmd] of scripts) collect.push({ folder: f, pm, name, cmd })
@@ -125,7 +129,7 @@ function registerScriptCommands(context) {
         const pkgUri = vscode.Uri.joinPath(f.uri, 'package.json')
         const pkg = await readPackageJson(pkgUri)
         if (!pkg) continue
-        const pm = detectPM(f.uri.fsPath, pkg)
+  const pm = await detectPM(f.uri.fsPath, pkg)
         const scripts = Object.entries(pkg.scripts || {}).filter(([name]) => !exclude.has(name))
         scripts.sort((a, b) => (priority[b[0]] || 0) - (priority[a[0]] || 0) || a[0].localeCompare(b[0]))
         for (const [name, cmd] of scripts) collect.push({ folder: f, pm, name, cmd })
@@ -137,7 +141,7 @@ function registerScriptCommands(context) {
         const pkgUri = vscode.Uri.joinPath(f.uri, 'package.json')
         const pkg = await readPackageJson(pkgUri)
         if (!pkg) continue
-        const pm = detectPM(f.uri.fsPath, pkg)
+  const pm = await detectPM(f.uri.fsPath, pkg)
         for (const [name, cmd] of Object.entries(pkg.scripts || {})) {
           if (exclude.has(name)) continue
           if (!union.has(name)) union.set(name, [])
