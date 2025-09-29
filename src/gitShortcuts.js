@@ -138,12 +138,20 @@ function registerGitShortcuts(context) {
         if (!normalized.includes(current)) return
       }
 
-      const folder = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor?.document?.uri) || workspaceFolder
+      let folder = null
+      try {
+        const activeDoc = vscode.window.activeTextEditor?.document
+        if (activeDoc && activeDoc.uri) {
+          folder = vscode.workspace.getWorkspaceFolder(activeDoc.uri)
+        }
+      } catch {}
+      if (!folder) folder = workspaceFolder
+      // If still no folder, fallback to process.cwd
       const { result, cursorSymbol } = await resolvePlaceholders(template, folder)
 
       const reuseSetting = cfg.get('reuseTerminalByTitle', true)
       const reuse = typeof entry.reuse === 'boolean' ? entry.reuse : reuseSetting
-      const cwd = entry.cwd || folder?.uri.fsPath
+      const cwd = entry.cwd || folder?.uri?.fsPath || process.cwd()
 
       let terminal = reuse ? vscode.window.terminals.find(t => t.name === title) : null
       if (!terminal) terminal = vscode.window.createTerminal({ name: title, cwd })

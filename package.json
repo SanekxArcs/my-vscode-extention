@@ -1,296 +1,363 @@
 {
-    "name": "dev-script",
-    "displayName": "Dev Script",
-    "description": "Custom dev script",
-    "version": "0.0.5",
-    "publisher": "local",
-    "engines": {
-        "vscode": "^1.60.0"
-    },
-    "categories": [
-        "Other"
+  "name": "dev-script",
+  "displayName": "Dev Script",
+  "description": "Custom dev script",
+  "version": "0.0.7",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:package.json",
+    "onStartupFinished",
+    "onCommand:extension.convertToViewportUnit",
+    "onCommand:extension.reverseConvertFromViewportUnit",
+    "onCommand:extension.cycleTailwindUnit",
+    "onCommand:extension.viewportSettingsQuick",
+    "onCommand:extension.convertHereQuick",
+    "onCommand:extension.convertCycleVW",
+    "onCommand:extension.convertCycleVH",
+    "onCommand:extension.cycleViewportScreen"
+  ],
+  "main": "./extension.js",
+  "dependencies": {
+    "jsonc-parser": "^3.2.0"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.convertToViewportUnit",
+        "title": "Convert CSS unit to vw/vh"
+      },
+      {
+        "command": "extension.reverseConvertFromViewportUnit",
+        "title": "Convert vw/vh to px/rem"
+      },
+      {
+        "command": "extension.cycleTailwindUnit",
+        "title": "Cycle px ↔ rem ↔ tw"
+      },
+      {
+        "command": "extension.viewportSettingsQuick",
+        "title": "Viewport Settings Quick"
+      },
+      {
+        "command": "extension.convertHereQuick",
+        "title": "Convert Here (to current viewport)"
+      },
+      {
+        "command": "extension.convertCycleVW",
+        "title": "Convert Cycle (vw)"
+      },
+      {
+        "command": "extension.convertCycleVH",
+        "title": "Convert Cycle (vh)"
+      },
+      {
+        "command": "extension.cycleViewportScreen",
+        "title": "Cycle Viewport Screen"
+      },
+      {
+        "command": "extension.stopRunningScripts",
+        "title": "Run Script: Stop Running Scripts"
+      },
+      {
+        "command": "extension.openCustomTerminals",
+        "title": "Open Custom Terminal Commands"
+      },
+      {
+        "command": "extension.runLastCustomTerminal",
+        "title": "Run Last Custom Terminal Command"
+      },
+      {
+        "command": "extension.customTerminal.finishSnippet",
+        "title": "Custom Terminal: Finish Snippet"
+      },
+      {
+        "command": "extension.customTerminal.history",
+        "title": "Custom Terminal: History"
+      }
     ],
-    "activationEvents": [
-        "workspaceContains:package.json",
-        "onCommand:extension.convertToViewportUnit",
-        "onCommand:extension.reverseConvertFromViewportUnit",
-        "onCommand:extension.cycleTailwindUnit",
-        "onCommand:extension.viewportSettingsQuick",
-        "onCommand:extension.convertHereQuick",
-        "onCommand:extension.convertCycleVW",
-        "onCommand:extension.convertCycleVH",
-        "onCommand:extension.cycleViewportScreen"
-    ],
-    "main": "./extension.js",
-    "contributes": {
-        "commands": [
-            {
-                "command": "extension.convertToViewportUnit",
-                "title": "Convert CSS unit to vw/vh"
-            },
-            {
-                "command": "extension.reverseConvertFromViewportUnit",
-                "title": "Convert vw/vh to px/rem"
-            },
-            {
-                "command": "extension.cycleTailwindUnit",
-                "title": "Cycle px ↔ rem ↔ tw"
-            },
-            {
-                "command": "extension.viewportSettingsQuick",
-                "title": "Viewport Settings Quick"
-            },
-            {
-                "command": "extension.convertHereQuick",
-                "title": "Convert Here (to current viewport)"
-            },
-            {
-                "command": "extension.convertCycleVW",
-                "title": "Convert Cycle (vw)"
-            },
-            {
-                "command": "extension.convertCycleVH",
-                "title": "Convert Cycle (vh)"
-            },
-            {
-                "command": "extension.cycleViewportScreen",
-                "title": "Cycle Viewport Screen"
-            },
-            {
-                "command": "extension.stopRunningScripts",
-                "title": "Run Script: Stop Running Scripts"
-            },
-            {
-                "command": "extension.openCustomTerminals",
-                "title": "Open Custom Terminal Commands"
-            },
-            {
-                "command": "extension.runLastCustomTerminal",
-                "title": "Run Last Custom Terminal Command"
-            },
-            {
-                "command": "extension.customTerminal.finishSnippet",
-                "title": "Custom Terminal: Finish Snippet"
-            },
-            {
-                "command": "extension.customTerminal.history",
-                "title": "Custom Terminal: History"
-            }
-        ],
-        "menus": {
-            "editor/context": [
-                {
-                    "command": "extension.convertToViewportUnit",
-                    "when": "editorTextFocus",
-                    "group": "navigation@9"
-                },
-                {
-                    "command": "extension.reverseConvertFromViewportUnit",
-                    "when": "editorTextFocus",
-                    "group": "navigation@10"
-                }
-            ]
+    "menus": {
+      "editor/context": [
+        {
+          "command": "extension.convertToViewportUnit",
+          "when": "editorTextFocus",
+          "group": "navigation@9"
         },
-        "keybindings": [
-            {
-                "command": "extension.convertToViewportUnit",
-                "key": "ctrl+alt+v",
-                "mac": "cmd+alt+v",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.reverseConvertFromViewportUnit",
-                "key": "ctrl+alt+shift+v",
-                "mac": "cmd+alt+shift+v",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.cycleTailwindUnit",
-                "key": "alt+z",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.convertCycleVW",
-                "key": "alt+v",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.convertCycleVH",
-                "key": "alt+h",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.cycleViewportScreen",
-                "key": "alt+x",
-                "when": "editorTextFocus || editorFocus"
-            }
+        {
+          "command": "extension.reverseConvertFromViewportUnit",
+          "when": "editorTextFocus",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "extension.convertToViewportUnit",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.reverseConvertFromViewportUnit",
+        "key": "ctrl+alt+shift+v",
+        "mac": "cmd+alt+shift+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.cycleTailwindUnit",
+        "key": "alt+z",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.convertCycleVW",
+        "key": "alt+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.convertCycleVH",
+        "key": "alt+h",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.cycleViewportScreen",
+        "key": "alt+x",
+        "when": "editorTextFocus || editorFocus"
+      }
+    ],
+    "codeActions": [
+      {
+        "languages": [
+          "css",
+          "scss",
+          "sass",
+          "less",
+          "javascript",
+          "typescript",
+          "javascriptreact",
+          "typescriptreact"
         ],
-        "codeActions": [
-            {
-                "languages": ["css", "scss", "sass", "less", "javascript", "typescript", "javascriptreact", "typescriptreact"],
-                "actions": [
-                    {
-                        "kind": "refactor.rewrite.viewport",
-                        "title": "Convert to vw/vh",
-                        "command": "extension.convertToViewportUnit"
-                    },
-                    {
-                        "kind": "refactor.rewrite.viewport.reverse",
-                        "title": "Convert vw/vh to px/rem",
-                        "command": "extension.reverseConvertFromViewportUnit"
-                    }
-                ]
-            }
-        ],
-        "configuration": [
-            {
-                "title": "Run Script: Conversion",
-                "properties": {
-                    "runScript.viewportScreens": {
-                        "type": "array",
-                        "items": { "type": "string" },
-                        "default": [
-                            "360x800","375x812","390x844","414x896","428x926","768x1024","800x1280","1024x1366","1280x800","1366x768","1440x900","1536x864","1600x900","1920x1080","2160x1440","2560x1440"
-                        ],
-                        "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion. Users can add or remove entries."
-                    },
-                    "runScript.baseFontSize": {
-                        "type": "number",
-                        "default": 16,
-                        "minimum": 1,
-                        "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
-                    },
-                    "runScript.viewportPrecision": {
-                        "type": "number",
-                        "default": 4,
-                        "minimum": 0,
-                        "maximum": 8,
-                        "description": "Number of decimal places to keep when converting to vw/vh."
-                    },
-                    "runScript.defaultOutputUnit": {
-                        "type": "string",
-                        "enum": ["px", "rem"],
-                        "default": "px",
-                        "description": "Default unit for reverse conversion (vw/vh to px or rem)."
-                    },
-                    "runScript.autoDetectViewportAxis": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
-                    },
-                    "runScript.lastUsedViewportUnit": {
-                        "type": "string",
-                        "enum": ["vw", "vh"],
-                        "default": "vw",
-                        "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
-                    },
-                    "runScript.lastUsedScreen": {
-                        "type": "string",
-                        "default": "1440x900",
-                        "description": "Last used screen resolution - automatically updated when you convert."
-                    }
-                }
-            },
-            {
-                "title": "Run Script: Script Scan & Buttons",
-                "properties": {
-                    "runScript.useDynamicScriptParsing": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
-                    },
-                    "runScript.workspaceMode": {
-                        "type": "string",
-                        "enum": ["first", "pick", "all"],
-                        "default": "first",
-                        "description": "How to handle multi-root workspaces: first folder only, pick folder on run, or show all folders' scripts with prefixes."
-                    },
-                    "runScript.excludeScripts": {
-                        "type": "array",
-                        "items": { "type": "string" },
-                        "default": ["test", "postinstall", "preinstall"],
-                        "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
-                    },
-                    "runScript.maxDynamicScriptButtons": {
-                        "type": "number",
-                        "default": 8,
-                        "minimum": 0,
-                        "description": "Maximum number of scripts to show as status bar buttons when dynamic parsing is enabled. Remaining scripts are available via a '+N' overflow menu."
-                    },
-                    "runScript.reuseTerminalForScripts": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
-                    },
-                    "runScript.askBeforeKill": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Ask for confirmation before stopping an already running script when re-running via Tasks API."
-                    }
-                }
-            },
-            {
-                "title": "Run Script: Saved Scripts",
-                "properties": {
-                    "runScript.customTerminals": {
-                        "type": "array",
-                        "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{ \n  \"runScript.customTerminals\": [\n    { \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\" },\n    { \"title\": \"Storybook Clean\", \"command\": \"npm run sb:clean && npm run storybook\" }\n  ]\n}\n```",
-                        "default": [],
-                        "items": {
-                            "type": "object",
-                            "required": ["title", "command"],
-                            "properties": {
-                                "title": { "type": "string", "description": "Status bar button title and terminal name" },
-                                "command": { "type": "string", "markdownDescription": "Shell snippet with placeholders: ${input:Label}, ${pick:Label|opt1|opt2}, ${env:VAR}, ${workspaceFolder}, ${clipboard}. Cursor marker via runScript.cursorSymbol, default '<|>'." },
-                                "cwd": { "type": "string", "description": "Working directory for the terminal (optional)" },
-                                "reuse": { "type": "boolean", "description": "Reuse terminal by title for this snippet (overrides global setting)" },
-                                "os": { "type": ["string", "array"], "description": "Limit snippet to OS: win32|darwin|linux or array of them" }
-                            }
-                        }
-                    },
-                    "runScript.customTerminalsButtonLabel": {
-                        "type": "string",
-                        "default": "git-c",
-                        "description": "Status Bar button label that opens the saved custom commands Quick Pick"
-                    },
-                    "runScript.cursorSymbol": {
-                        "type": "string",
-                        "default": "<|>",
-                        "description": "Marker placed inside a snippet to indicate cursor position for manual input in terminal"
-                    },
-                    "runScript.showPreviewForCustomTerminals": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Show a modal preview of the final command before running (prompt mode)"
-                    },
-                    "runScript.reuseTerminalByTitle": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Reuse an existing terminal matched by the snippet title"
-                    },
-                    "runScript.customHistorySize": {
-                        "type": "number",
-                        "default": 10,
-                        "minimum": 0,
-                        "description": "Number of last executed custom commands to persist for quick rerun"
-                    },
-                    "runScript.confirmDangerousCommands": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Ask for confirmation when a custom command looks dangerous (e.g., git reset --hard, git clean -fd, git push -f)"
-                    },
-                    "runScript.pinLastCustomTerminal": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Show a separate Status Bar button for the last selected custom command for quick re-run"
-                    },
-                    "runScript.pinLastCustomTerminalLabelPrefix": {
-                        "type": "string",
-                        "default": "★",
-                        "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
-                    }
-                }
-            }
+        "actions": [
+          {
+            "kind": "refactor.rewrite.viewport",
+            "title": "Convert to vw/vh",
+            "command": "extension.convertToViewportUnit"
+          },
+          {
+            "kind": "refactor.rewrite.viewport.reverse",
+            "title": "Convert vw/vh to px/rem",
+            "command": "extension.reverseConvertFromViewportUnit"
+          }
         ]
-    }
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Run Script: Conversion",
+        "properties": {
+          "runScript.viewportScreens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "360x800",
+              "375x812",
+              "390x844",
+              "414x896",
+              "428x926",
+              "768x1024",
+              "800x1280",
+              "1024x1366",
+              "1280x800",
+              "1366x768",
+              "1440x900",
+              "1536x864",
+              "1600x900",
+              "1920x1080",
+              "2160x1440",
+              "2560x1440"
+            ],
+            "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion. Users can add or remove entries."
+          },
+          "runScript.baseFontSize": {
+            "type": "number",
+            "default": 16,
+            "minimum": 1,
+            "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
+          },
+          "runScript.viewportPrecision": {
+            "type": "number",
+            "default": 4,
+            "minimum": 0,
+            "maximum": 8,
+            "description": "Number of decimal places to keep when converting to vw/vh."
+          },
+          "runScript.defaultOutputUnit": {
+            "type": "string",
+            "enum": [
+              "px",
+              "rem"
+            ],
+            "default": "px",
+            "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+          },
+          "runScript.autoDetectViewportAxis": {
+            "type": "boolean",
+            "default": true,
+            "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
+          },
+          "runScript.lastUsedViewportUnit": {
+            "type": "string",
+            "enum": [
+              "vw",
+              "vh"
+            ],
+            "default": "vw",
+            "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
+          },
+          "runScript.lastUsedScreen": {
+            "type": "string",
+            "default": "1440x900",
+            "description": "Last used screen resolution - automatically updated when you convert."
+          }
+        }
+      },
+      {
+        "title": "Run Script: Script Scan & Buttons",
+        "properties": {
+          "runScript.useDynamicScriptParsing": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable dynamic parsing of all package.json scripts as buttons (disables custom buttons)"
+          },
+          "runScript.workspaceMode": {
+            "type": "string",
+            "enum": [
+              "first",
+              "pick",
+              "all"
+            ],
+            "default": "first",
+            "description": "How to handle multi-root workspaces: first folder only, pick folder on run, or show all folders' scripts with prefixes."
+          },
+          "runScript.excludeScripts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "test",
+              "postinstall",
+              "preinstall"
+            ],
+            "description": "Scripts to exclude from dynamic parsing (e.g., test, postinstall)"
+          },
+          "runScript.maxDynamicScriptButtons": {
+            "type": "number",
+            "default": 8,
+            "minimum": 0,
+            "description": "Maximum number of scripts to show as status bar buttons when dynamic parsing is enabled. Remaining scripts are available via a '+N' overflow menu."
+          },
+          "runScript.reuseTerminalForScripts": {
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, reuse the same terminal per script (named 'npm:<script>') instead of creating a new terminal each run."
+          },
+          "runScript.askBeforeKill": {
+            "type": "boolean",
+            "default": true,
+            "description": "Ask for confirmation before stopping an already running script when re-running via Tasks API."
+          }
+        }
+      },
+      {
+        "title": "Run Script: Saved Scripts",
+        "properties": {
+          "runScript.customTerminals": {
+            "type": "array",
+            "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{ \n  \"runScript.customTerminals\": [\n    { \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\" },\n    { \"title\": \"Storybook Clean\", \"command\": \"npm run sb:clean && npm run storybook\" }\n  ]\n}\n```",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "command"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Status bar button title and terminal name"
+                },
+                "command": {
+                  "type": "string",
+                  "markdownDescription": "Shell snippet with placeholders: ${input:Label}, ${pick:Label|opt1|opt2}, ${env:VAR}, ${workspaceFolder}, ${clipboard}. Cursor marker via runScript.cursorSymbol, default '<|>'."
+                },
+                "cwd": {
+                  "type": "string",
+                  "description": "Working directory for the terminal (optional)"
+                },
+                "reuse": {
+                  "type": "boolean",
+                  "description": "Reuse terminal by title for this snippet (overrides global setting)"
+                },
+                "os": {
+                  "type": [
+                    "string",
+                    "array"
+                  ],
+                  "description": "Limit snippet to OS: win32|darwin|linux or array of them"
+                }
+              }
+            }
+          },
+          "runScript.customTerminalsButtonLabel": {
+            "type": "string",
+            "default": "git-c",
+            "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+          },
+          "runScript.cursorSymbol": {
+            "type": "string",
+            "default": "<|>",
+            "description": "Marker placed inside a snippet to indicate cursor position for manual input in terminal"
+          },
+          "runScript.showPreviewForCustomTerminals": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show a modal preview of the final command before running (prompt mode)"
+          },
+          "runScript.reuseTerminalByTitle": {
+            "type": "boolean",
+            "default": true,
+            "description": "Reuse an existing terminal matched by the snippet title"
+          },
+          "runScript.customHistorySize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 0,
+            "description": "Number of last executed custom commands to persist for quick rerun"
+          },
+          "runScript.confirmDangerousCommands": {
+            "type": "boolean",
+            "default": true,
+            "description": "Ask for confirmation when a custom command looks dangerous (e.g., git reset --hard, git clean -fd, git push -f)"
+          },
+          "runScript.pinLastCustomTerminal": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show a separate Status Bar button for the last selected custom command for quick re-run"
+          },
+          "runScript.pinLastCustomTerminalLabelPrefix": {
+            "type": "string",
+            "default": "★",
+            "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
+          }
+        }
+      }
+    ]
+  }
 }

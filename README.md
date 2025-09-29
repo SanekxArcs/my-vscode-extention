@@ -11,8 +11,9 @@ Quickly run package scripts, manage custom terminal snippets with placeholders, 
 - CSS unit converter (px/rem ↔ vw/vh) via actions and keybindings
 
 ## Activation
-- Auto-activates when a workspace contains a package.json
-- Or when any extension command is executed
+- Auto-activates after VS Code startup (no manual trigger needed)
+- Also activates when a workspace contains a package.json or any command runs
+- Extension status items appear only if `npm install` was run when packaging (`node_modules` must be present)
 
 ## Dynamic Scripts
 - Enabled by default via `runScript.useDynamicScriptParsing`
@@ -84,6 +85,7 @@ Example:
 - Ensure a package.json exists in the workspace (for dynamic scripts)
 - Verify Node/PM in PATH for running scripts
 - If scripts don’t appear, check exclude list and watch for errors in the Output panel
+- Packaging reminder: run `npm install` before creating a VSIX so bundled `node_modules/jsonc-parser` is included
 
 ## Development
 - Open the folder in VS Code and press F5 to launch an Extension Development Host
