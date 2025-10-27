@@ -2,7 +2,7 @@
   "name": "dev-script",
   "displayName": "Dev Script",
   "description": "Custom dev script",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "publisher": "local",
   "engines": {
     "vscode": "^1.60.0"
@@ -20,7 +20,8 @@
     "onCommand:extension.convertHereQuick",
     "onCommand:extension.convertCycleVW",
     "onCommand:extension.convertCycleVH",
-    "onCommand:extension.cycleViewportScreen"
+    "onCommand:extension.cycleViewportScreen",
+    "onCommand:extension.envSwitcher.select"
   ],
   "main": "./extension.js",
   "dependencies": {
@@ -79,6 +80,10 @@
       {
         "command": "extension.customTerminal.history",
         "title": "Custom Terminal: History"
+      },
+      {
+        "command": "extension.envSwitcher.select",
+        "title": "Select WordPress Environment"
       }
     ],
     "menus": {
@@ -355,6 +360,16 @@
             "type": "string",
             "default": "★",
             "description": "Prefix icon/label for the pinned last custom command button (e.g., ★)"
+          }
+        }
+      },
+      {
+        "title": "Run Script: Environment Switcher",
+        "properties": {
+          "runScript.envSwitcherFile": {
+            "type": "string",
+            "default": ".env.local",
+            "description": "Path to the env file containing Priwatt WordPress endpoints. Relative paths resolve from the first workspace folder; supports ~/ expansion."
           }
         }
       }

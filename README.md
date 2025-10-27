@@ -1,6 +1,6 @@
 # Dev Script — VS Code Extension
 
-Quickly run package scripts, manage custom terminal snippets with placeholders, and convert CSS units. Dynamic script buttons, multi-root support, package manager auto-detection, and a powerful custom terminal system are included.
+Quickly run package scripts, manage custom terminal snippets with placeholders, convert CSS units, and switch Priwatt WordPress environments from the status bar.
 
 ## Highlights
 - Dynamic status bar buttons from package.json scripts (with exclusions)
@@ -9,6 +9,7 @@ Quickly run package scripts, manage custom terminal snippets with placeholders, 
 - Multi-root aware: first | pick | all modes
 - Custom terminal snippets with placeholders, cursor mode, preview, reuse, OS filters, and history
 - CSS unit converter (px/rem ↔ vw/vh) via actions and keybindings
+- Status bar picker for Priwatt WordPress env blocks inside `.env.local` (toggle comments automatically)
 
 ## Activation
 - Auto-activates after VS Code startup (no manual trigger needed)
@@ -72,6 +73,7 @@ Example:
 - Run Last Custom Terminal Command: `extension.runLastCustomTerminal`
 - Custom Terminal: Finish Snippet: `extension.customTerminal.finishSnippet`
 - Custom Terminal: History: `extension.customTerminal.history`
+- Select WordPress Environment: `extension.envSwitcher.select`
 - Run Script: Stop Running Scripts: `extension.stopRunningScripts`
 
 ## Key Settings
@@ -86,6 +88,7 @@ Example:
 - Verify Node/PM in PATH for running scripts
 - If scripts don’t appear, check exclude list and watch for errors in the Output panel
 - Packaging reminder: run `npm install` before creating a VSIX so bundled `node_modules/jsonc-parser` is included
+- Environment switcher looks for `.env.local` by default; override via `runScript.envSwitcherFile`
 
 ## Development
 - Open the folder in VS Code and press F5 to launch an Extension Development Host
