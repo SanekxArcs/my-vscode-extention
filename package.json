@@ -2,7 +2,7 @@
   "name": "dev-script",
   "displayName": "Dev Script",
   "description": "Custom dev script",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "publisher": "local",
   "engines": {
     "vscode": "^1.60.0"
@@ -375,6 +375,11 @@
             "type": "string",
             "default": ".env.local",
             "description": "Path to the env file containing Priwatt WordPress endpoints. Relative paths resolve from the first workspace folder; supports ~/ expansion."
+          },
+          "runScript.showEnvSwitcher": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the environment switcher status bar button"
           }
         }
       }

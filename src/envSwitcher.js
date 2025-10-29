@@ -110,9 +110,7 @@ function registerEnvSwitcher(context) {
       cachedParse = parseEnvFile(text)
     } catch (error) {
       cachedParse = null
-      item.text = '$(alert) env missing'
-      item.tooltip = `Unable to read env file: ${error.message}`
-      item.show()
+      item.hide()
       return
     }
 
@@ -209,12 +207,25 @@ function registerEnvSwitcher(context) {
     await updateStatus()
   }
 
+  const updateStatusBarVisibility = () => {
+    const cfg = getConfig()
+    const showEnvSwitcher = cfg.get('showEnvSwitcher', true)
+    if (showEnvSwitcher) {
+      updateStatus()
+    } else {
+      item.hide()
+    }
+  }
+
   context.subscriptions.push(
     vscode.commands.registerCommand('extension.envSwitcher.select', selectEnvironment),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('runScript.envSwitcherFile')) {
         ensureWatcher()
         updateStatus()
+      }
+      if (event.affectsConfiguration('runScript.showEnvSwitcher')) {
+        updateStatusBarVisibility()
       }
     }),
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
@@ -224,7 +235,7 @@ function registerEnvSwitcher(context) {
   )
 
   ensureWatcher()
-  updateStatus()
+  updateStatusBarVisibility()
 }
 
 module.exports = { registerEnvSwitcher }
