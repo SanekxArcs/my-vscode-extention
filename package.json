@@ -2,7 +2,7 @@
   "name": "dev-script",
   "displayName": "Dev Script",
   "description": "Custom dev script",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "local",
   "engines": {
     "vscode": "^1.60.0"
@@ -229,6 +229,11 @@
             "type": "string",
             "default": "1440x900",
             "description": "Last used screen resolution - automatically updated when you convert."
+          },
+          "runScript.showViewportStatusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the viewport screen, base font size, and precision status bar button"
           }
         }
       },

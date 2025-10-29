@@ -219,7 +219,7 @@ function registerGitShortcuts(context) {
     context.subscriptions.push(item)
 
     let pinnedItem = null
-    const updatePinned = () => {
+    const updatePinned = async () => {
       if (pinnedItem) { try { pinnedItem.dispose() } catch {} ; pinnedItem = null }
       const pinEnabled = cfg.get('pinLastCustomTerminal', false)
       if (!pinEnabled || !lastPicked) return
@@ -228,11 +228,30 @@ function registerGitShortcuts(context) {
       pinnedItem.text = `${prefix} ${lastPicked.title}`
       pinnedItem.tooltip = `Run last custom: ${lastPicked.command}`
       const pinCmdId = 'extension.customTerminal._runPinned'
-      const pinDisp = vscode.commands.registerCommand(pinCmdId, async () => {
-        try { await runCustomEntry(lastPicked) } catch (error) { vscode.window.showErrorMessage(`Error running pinned command: ${error.message}`) }
-      })
-      customCommands.push(pinDisp)
-      context.subscriptions.push(pinDisp)
+
+      try {
+        const existing = await vscode.commands.getCommands(true)
+        if (!existing.includes(pinCmdId)) {
+          const pinDisp = vscode.commands.registerCommand(pinCmdId, async () => {
+            try { await runCustomEntry(lastPicked) } catch (error) { vscode.window.showErrorMessage(`Error running pinned command: ${error.message}`) }
+          })
+          customCommands.push(pinDisp)
+          context.subscriptions.push(pinDisp)
+        }
+      } catch (err) {
+        // If getCommands or registerCommand fails for any reason, avoid crashing the builder.
+        // Fall back to attempting registration once and ignore duplicate errors.
+        try {
+          const pinDisp = vscode.commands.registerCommand(pinCmdId, async () => {
+            try { await runCustomEntry(lastPicked) } catch (error) { vscode.window.showErrorMessage(`Error running pinned command: ${error.message}`) }
+          })
+          customCommands.push(pinDisp)
+          context.subscriptions.push(pinDisp)
+        } catch (e) {
+          // ignore duplicate registration errors
+        }
+      }
+
       pinnedItem.command = pinCmdId
       pinnedItem.show()
       customButtons.push(pinnedItem)

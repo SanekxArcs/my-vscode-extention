@@ -503,8 +503,26 @@ function registerConverter(context) {
   })
   context.subscriptions.push(settingsCmd)
   statusItem.command = 'extension.viewportSettingsQuick'
-  updateStatus()
-  statusItem.show()
+  
+  const updateStatusBarVisibility = () => {
+    const cfg = getConfig();
+    const showStatusBar = cfg.get("showViewportStatusBar", true);
+    if (showStatusBar) {
+      updateStatus();
+      statusItem.show();
+    } else {
+      statusItem.hide();
+    }
+  };
+
+  updateStatusBarVisibility();
+
+  const onConfigChange = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("runScript.showViewportStatusBar")) {
+      updateStatusBarVisibility();
+    }
+  });
+  context.subscriptions.push(onConfigChange);
 
   // Quick convert command: convert values at cursor/selection to current vw/vh
   const quickConvertCmd = vscode.commands.registerCommand('extension.convertHereQuick', async () => {
