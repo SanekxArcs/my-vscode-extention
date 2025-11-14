@@ -1,0 +1,43 @@
+{
+  "name": "priwatt-env-switcher",
+  "displayName": "Priwatt Env Switcher",
+  "description": "Toggle WordPress environment blocks inside .env files directly from the VS Code status bar.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:priwattEnvSwitcher.select"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "priwattEnvSwitcher.select",
+        "title": "Priwatt Env Switcher: Select Environment"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Priwatt Env Switcher",
+        "properties": {
+          "priwattEnvSwitcher.envSwitcherFile": {
+            "type": "string",
+            "default": ".env.local",
+            "description": "Path to the env file containing Priwatt WordPress endpoints. Relative paths resolve from the first workspace folder; supports ~/ expansion."
+          },
+          "priwattEnvSwitcher.showEnvSwitcher": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the environment switcher status bar button"
+          }
+        }
+      }
+    ]
+  }
+}

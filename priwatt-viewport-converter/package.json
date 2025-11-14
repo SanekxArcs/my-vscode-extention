@@ -1,0 +1,188 @@
+{
+  "name": "priwatt-viewport-converter",
+  "displayName": "Priwatt Viewport Converter",
+  "description": "Convert CSS length units between px/rem and vw/vh with smart status bar utilities.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:priwattViewport.convertToViewportUnit",
+    "onCommand:priwattViewport.reverseConvertFromViewportUnit",
+    "onCommand:priwattViewport.convertHereQuick",
+    "onCommand:priwattViewport.convertCycleVW",
+    "onCommand:priwattViewport.convertCycleVH",
+    "onCommand:priwattViewport.cycleViewportScreen",
+    "onCommand:priwattViewport.viewportSettingsQuick"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "priwattViewport.convertToViewportUnit",
+        "title": "Priwatt Viewport Converter: Convert CSS unit to vw/vh"
+      },
+      {
+        "command": "priwattViewport.reverseConvertFromViewportUnit",
+        "title": "Priwatt Viewport Converter: Convert vw/vh to px/rem"
+      },
+      {
+        "command": "priwattViewport.convertHereQuick",
+        "title": "Priwatt Viewport Converter: Convert Selection"
+      },
+      {
+        "command": "priwattViewport.convertCycleVW",
+        "title": "Priwatt Viewport Converter: Convert Cycle (vw)"
+      },
+      {
+        "command": "priwattViewport.convertCycleVH",
+        "title": "Priwatt Viewport Converter: Convert Cycle (vh)"
+      },
+      {
+        "command": "priwattViewport.cycleViewportScreen",
+        "title": "Priwatt Viewport Converter: Cycle Viewport Screen"
+      },
+      {
+        "command": "priwattViewport.viewportSettingsQuick",
+        "title": "Priwatt Viewport Converter: Viewport Settings"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "priwattViewport.convertToViewportUnit",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "priwattViewport.reverseConvertFromViewportUnit",
+        "key": "ctrl+alt+shift+v",
+        "mac": "cmd+alt+shift+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "priwattViewport.convertCycleVW",
+        "key": "alt+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "priwattViewport.convertCycleVH",
+        "key": "alt+h",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "priwattViewport.cycleViewportScreen",
+        "key": "alt+x",
+        "when": "editorTextFocus || editorFocus"
+      }
+    ],
+    "codeActions": [
+      {
+        "languages": [
+          "css",
+          "scss",
+          "sass",
+          "less",
+          "javascript",
+          "typescript",
+          "javascriptreact",
+          "typescriptreact"
+        ],
+        "actions": [
+          {
+            "kind": "refactor.rewrite.viewport",
+            "title": "Convert to vw/vh",
+            "command": "priwattViewport.convertToViewportUnit"
+          },
+          {
+            "kind": "refactor.rewrite.viewport.reverse",
+            "title": "Convert vw/vh to px/rem",
+            "command": "priwattViewport.reverseConvertFromViewportUnit"
+          }
+        ]
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Priwatt Viewport Converter",
+        "properties": {
+          "priwattViewport.viewportScreens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "360x800",
+              "375x812",
+              "390x844",
+              "414x896",
+              "428x926",
+              "768x1024",
+              "800x1280",
+              "1024x1366",
+              "1280x800",
+              "1366x768",
+              "1440x900",
+              "1536x864",
+              "1600x900",
+              "1920x1080",
+              "2160x1440",
+              "2560x1440"
+            ],
+            "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion."
+          },
+          "priwattViewport.baseFontSize": {
+            "type": "number",
+            "default": 16,
+            "minimum": 1,
+            "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
+          },
+          "priwattViewport.viewportPrecision": {
+            "type": "number",
+            "default": 4,
+            "minimum": 0,
+            "maximum": 8,
+            "description": "Number of decimal places to keep when converting to vw/vh."
+          },
+          "priwattViewport.defaultOutputUnit": {
+            "type": "string",
+            "enum": [
+              "px",
+              "rem"
+            ],
+            "default": "px",
+            "description": "Default unit for reverse conversion (vw/vh to px or rem)."
+          },
+          "priwattViewport.autoDetectViewportAxis": {
+            "type": "boolean",
+            "default": true,
+            "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
+          },
+          "priwattViewport.lastUsedViewportUnit": {
+            "type": "string",
+            "enum": [
+              "vw",
+              "vh"
+            ],
+            "default": "vw",
+            "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
+          },
+          "priwattViewport.lastUsedScreen": {
+            "type": "string",
+            "default": "1440x900",
+            "description": "Last used screen resolution - automatically updated when you convert."
+          },
+          "priwattViewport.showViewportStatusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the viewport screen, base font size, and precision status bar button."
+          }
+        }
+      }
+    ]
+  }
+}

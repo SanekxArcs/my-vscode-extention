@@ -1,0 +1,80 @@
+{
+  "name": "priwatt-script-runner",
+  "displayName": "Priwatt Script Runner",
+  "description": "Status bar buttons for package.json scripts with auto-detected package manager support.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:package.json",
+    "onStartupFinished",
+    "onCommand:priwattScriptRunner.stopRunningScripts"
+  ],
+  "main": "./extension.js",
+  "dependencies": {
+    "jsonc-parser": "^3.2.0"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "priwattScriptRunner.stopRunningScripts",
+        "title": "Priwatt Script Runner: Stop Running Scripts"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Priwatt Script Runner",
+        "properties": {
+          "priwattScriptRunner.useDynamicScriptParsing": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable dynamic status bar buttons generated from package.json scripts."
+          },
+          "priwattScriptRunner.workspaceMode": {
+            "type": "string",
+            "enum": [
+              "first",
+              "pick",
+              "all"
+            ],
+            "default": "first",
+            "description": "How to handle multi-root workspaces when building buttons: first folder, pick per run, or all folders."
+          },
+          "priwattScriptRunner.excludeScripts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "test",
+              "postinstall",
+              "preinstall"
+            ],
+            "description": "List of scripts to ignore when generating status bar buttons."
+          },
+          "priwattScriptRunner.maxDynamicScriptButtons": {
+            "type": "number",
+            "default": 8,
+            "minimum": 0,
+            "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
+          },
+          "priwattScriptRunner.reuseTerminalForScripts": {
+            "type": "boolean",
+            "default": true,
+            "description": "Reuse dedicated terminals per script instead of creating a new terminal each time."
+          },
+          "priwattScriptRunner.askBeforeKill": {
+            "type": "boolean",
+            "default": true,
+            "description": "Ask for confirmation before stopping a running script when re-running from the status bar."
+          }
+        }
+      }
+    ]
+  }
+}

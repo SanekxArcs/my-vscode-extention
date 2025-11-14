@@ -1,0 +1,130 @@
+{
+  "name": "priwatt-git-terminal",
+  "displayName": "Priwatt Git Terminal",
+  "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:priwattGitTerminal.openCommands",
+    "onCommand:priwattGitTerminal.runLastCommand",
+    "onCommand:priwattGitTerminal.finishSnippet",
+    "onCommand:priwattGitTerminal.history"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "priwattGitTerminal.openCommands",
+        "title": "Priwatt Git Terminal: Open Saved Commands"
+      },
+      {
+        "command": "priwattGitTerminal.runLastCommand",
+        "title": "Priwatt Git Terminal: Run Last Command"
+      },
+      {
+        "command": "priwattGitTerminal.finishSnippet",
+        "title": "Priwatt Git Terminal: Finish Snippet"
+      },
+      {
+        "command": "priwattGitTerminal.history",
+        "title": "Priwatt Git Terminal: History"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Priwatt Git Terminal",
+        "properties": {
+          "priwattGitTerminal.customTerminals": {
+            "type": "array",
+            "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{\n  \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\"\n}\n```",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "command"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Status bar button title and terminal name"
+                },
+                "command": {
+                  "type": "string",
+                  "markdownDescription": "Shell snippet. Supports placeholders: ${input:Label}, ${pick:Label|opt1|opt2}, ${env:VAR}, ${workspaceFolder}, ${clipboard}."
+                },
+                "cwd": {
+                  "type": "string",
+                  "description": "Working directory for the terminal (optional)"
+                },
+                "reuse": {
+                  "type": "boolean",
+                  "description": "Override terminal reuse behavior for this snippet"
+                },
+                "os": {
+                  "type": [
+                    "string",
+                    "array"
+                  ],
+                  "description": "Limit snippet to specific operating systems (win32|darwin|linux)"
+                }
+              }
+            }
+          },
+          "priwattGitTerminal.customTerminalsButtonLabel": {
+            "type": "string",
+            "default": "git-c",
+            "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+          },
+          "priwattGitTerminal.cursorSymbol": {
+            "type": "string",
+            "default": "<|>",
+            "description": "Marker inside snippets for manual cursor placement before finishing the command"
+          },
+          "priwattGitTerminal.showPreviewForCustomTerminals": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show a modal preview of the final command before running"
+          },
+          "priwattGitTerminal.reuseTerminalByTitle": {
+            "type": "boolean",
+            "default": true,
+            "description": "Reuse existing terminal windows matched by snippet title"
+          },
+          "priwattGitTerminal.customHistorySize": {
+            "type": "number",
+            "default": 10,
+            "minimum": 0,
+            "description": "Number of recent custom commands to remember"
+          },
+          "priwattGitTerminal.confirmDangerousCommands": {
+            "type": "boolean",
+            "default": true,
+            "description": "Ask for confirmation when a command appears dangerous (e.g., git reset --hard)"
+          },
+          "priwattGitTerminal.pinLastCustomTerminal": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show a separate Status Bar button for the last executed custom command"
+          },
+          "priwattGitTerminal.pinLastCustomTerminalLabelPrefix": {
+            "type": "string",
+            "default": "★",
+            "description": "Prefix icon/label for the pinned last custom command button"
+          },
+          "priwattGitTerminal.showStatusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the saved command status bar button"
+          }
+        }
+      }
+    ]
+  }
+}
