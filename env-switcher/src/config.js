@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'priwattEnvSwitcher'
+const CONFIG_SECTION = 'envSwitcher'
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)

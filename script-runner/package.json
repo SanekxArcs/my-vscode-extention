@@ -1,6 +1,6 @@
 {
-  "name": "priwatt-script-runner",
-  "displayName": "Priwatt Script Runner",
+  "name": "script-runner",
+  "displayName": "Script Runner",
   "description": "Status bar buttons for package.json scripts with auto-detected package manager support.",
   "version": "0.0.1",
   "publisher": "local",
@@ -13,7 +13,7 @@
   "activationEvents": [
     "workspaceContains:package.json",
     "onStartupFinished",
-    "onCommand:priwattScriptRunner.stopRunningScripts"
+    "onCommand:scriptRunner.stopRunningScripts"
   ],
   "main": "./extension.js",
   "dependencies": {
@@ -22,20 +22,20 @@
   "contributes": {
     "commands": [
       {
-        "command": "priwattScriptRunner.stopRunningScripts",
-        "title": "Priwatt Script Runner: Stop Running Scripts"
+        "command": "scriptRunner.stopRunningScripts",
+        "title": "Script Runner: Stop Running Scripts"
       }
     ],
     "configuration": [
       {
-        "title": "Priwatt Script Runner",
+        "title": "Script Runner",
         "properties": {
-          "priwattScriptRunner.useDynamicScriptParsing": {
+          "scriptRunner.useDynamicScriptParsing": {
             "type": "boolean",
             "default": true,
             "description": "Enable dynamic status bar buttons generated from package.json scripts."
           },
-          "priwattScriptRunner.workspaceMode": {
+          "scriptRunner.workspaceMode": {
             "type": "string",
             "enum": [
               "first",
@@ -45,7 +45,7 @@
             "default": "first",
             "description": "How to handle multi-root workspaces when building buttons: first folder, pick per run, or all folders."
           },
-          "priwattScriptRunner.excludeScripts": {
+          "scriptRunner.excludeScripts": {
             "type": "array",
             "items": {
               "type": "string"
@@ -57,18 +57,18 @@
             ],
             "description": "List of scripts to ignore when generating status bar buttons."
           },
-          "priwattScriptRunner.maxDynamicScriptButtons": {
+          "scriptRunner.maxDynamicScriptButtons": {
             "type": "number",
             "default": 8,
             "minimum": 0,
             "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
           },
-          "priwattScriptRunner.reuseTerminalForScripts": {
+          "scriptRunner.reuseTerminalForScripts": {
             "type": "boolean",
             "default": true,
             "description": "Reuse dedicated terminals per script instead of creating a new terminal each time."
           },
-          "priwattScriptRunner.askBeforeKill": {
+          "scriptRunner.askBeforeKill": {
             "type": "boolean",
             "default": true,
             "description": "Ask for confirmation before stopping a running script when re-running from the status bar."

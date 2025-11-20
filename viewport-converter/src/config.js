@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'priwattScriptRunner'
+const CONFIG_SECTION = 'viewportConverter'
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)

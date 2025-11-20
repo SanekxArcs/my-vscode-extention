@@ -123,14 +123,14 @@ function guessAxis(lineText) {
 }
 
 function registerConverter(context) {
-  const convertToViewportCmd = vscode.commands.registerCommand('priwattViewport.convertToViewportUnit', async () => {
+  const convertToViewportCmd = vscode.commands.registerCommand('viewportConverter.convertToViewportUnit', async () => {
     const cfg = getConfig()
     const screens = cfg.get('viewportScreens', [])
     const precision = cfg.get('viewportPrecision', 4)
     const baseFontSize = cfg.get('baseFontSize', 16)
 
     if (!Array.isArray(screens) || screens.length === 0) {
-      vscode.window.showErrorMessage('No screens configured. Add entries in settings: priwattViewport.viewportScreens (e.g., 1440x1024).')
+      vscode.window.showErrorMessage('No screens configured. Add entries in settings: viewportConverter.viewportScreens (e.g., 1440x1024).')
       return
     }
 
@@ -215,7 +215,7 @@ function registerConverter(context) {
   })
   context.subscriptions.push(convertToViewportCmd)
 
-  const reverseConvertCmd = vscode.commands.registerCommand('priwattViewport.reverseConvertFromViewportUnit', async () => {
+  const reverseConvertCmd = vscode.commands.registerCommand('viewportConverter.reverseConvertFromViewportUnit', async () => {
     const cfg = getConfig()
     const screens = cfg.get('viewportScreens', [])
     const precision = cfg.get('viewportPrecision', 4)
@@ -223,7 +223,7 @@ function registerConverter(context) {
     const defaultOutputUnit = cfg.get('defaultOutputUnit', 'px')
 
     if (!Array.isArray(screens) || screens.length === 0) {
-      vscode.window.showErrorMessage('No screens configured. Add entries in settings: priwattViewport.viewportScreens (e.g., 1440x1024).')
+      vscode.window.showErrorMessage('No screens configured. Add entries in settings: viewportConverter.viewportScreens (e.g., 1440x1024).')
       return
     }
 
@@ -313,7 +313,7 @@ function registerConverter(context) {
   })
   context.subscriptions.push(reverseConvertCmd)
 
-  const cycleTailwindCmd = vscode.commands.registerCommand('priwattViewport.cycleTailwindUnit', async () => {
+  const cycleTailwindCmd = vscode.commands.registerCommand('viewportConverter.cycleTailwindUnit', async () => {
     const cfg = getConfig()
     const baseFontSize = cfg.get('baseFontSize', 16)
     const editor = vscode.window.activeTextEditor
@@ -381,7 +381,7 @@ function registerConverter(context) {
 
     const screen = parseScreen(cfg.get('lastUsedScreen', '1440x900'))
     if (!screen) {
-      vscode.window.showErrorMessage('Invalid priwattViewport.lastUsedScreen setting.')
+      vscode.window.showErrorMessage('Invalid viewportConverter.lastUsedScreen setting.')
       return
     }
 
@@ -444,8 +444,8 @@ function registerConverter(context) {
     })
   }
 
-  const cycleVWCmd = vscode.commands.registerCommand('priwattViewport.convertCycleVW', async () => runConvertCycleAxis('vw'))
-  const cycleVHCmd = vscode.commands.registerCommand('priwattViewport.convertCycleVH', async () => runConvertCycleAxis('vh'))
+  const cycleVWCmd = vscode.commands.registerCommand('viewportConverter.convertCycleVW', async () => runConvertCycleAxis('vw'))
+  const cycleVHCmd = vscode.commands.registerCommand('viewportConverter.convertCycleVH', async () => runConvertCycleAxis('vh'))
   context.subscriptions.push(cycleVWCmd, cycleVHCmd)
 
   const codeActionProvider = {
@@ -460,12 +460,12 @@ function registerConverter(context) {
       const actions = []
       if (['px', 'rem'].includes(parsed.unit)) {
         const action = new vscode.CodeAction('Convert to vw/vh', vscode.CodeActionKind.RefactorRewrite)
-        action.command = { command: 'priwattViewport.convertToViewportUnit', title: 'Convert to vw/vh' }
+        action.command = { command: 'viewportConverter.convertToViewportUnit', title: 'Convert to vw/vh' }
         actions.push(action)
       }
       if (viewportUnits.includes(parsed.unit)) {
         const action = new vscode.CodeAction('Convert vw/vh to px/rem', vscode.CodeActionKind.RefactorRewrite)
-        action.command = { command: 'priwattViewport.reverseConvertFromViewportUnit', title: 'Convert vw/vh to px/rem' }
+        action.command = { command: 'viewportConverter.reverseConvertFromViewportUnit', title: 'Convert vw/vh to px/rem' }
         actions.push(action)
       }
       return actions
@@ -492,11 +492,11 @@ function registerConverter(context) {
     statusItem.tooltip = 'Click to change viewport screen, base font size, or precision'
   }
 
-  const cycleScreenCmd = vscode.commands.registerCommand('priwattViewport.cycleViewportScreen', async () => {
+  const cycleScreenCmd = vscode.commands.registerCommand('viewportConverter.cycleViewportScreen', async () => {
     const cfg = getConfig()
     const screens = cfg.get('viewportScreens', [])
     if (!Array.isArray(screens) || screens.length === 0) {
-      vscode.window.showErrorMessage('No screens configured. Add entries in settings: priwattViewport.viewportScreens (e.g., 1440x1024).')
+      vscode.window.showErrorMessage('No screens configured. Add entries in settings: viewportConverter.viewportScreens (e.g., 1440x1024).')
       return
     }
     const current = cfg.get('lastUsedScreen', screens[0])
@@ -507,7 +507,7 @@ function registerConverter(context) {
   })
   context.subscriptions.push(cycleScreenCmd)
 
-  const settingsCmd = vscode.commands.registerCommand('priwattViewport.viewportSettingsQuick', async () => {
+  const settingsCmd = vscode.commands.registerCommand('viewportConverter.viewportSettingsQuick', async () => {
     const pick = await vscode.window.showQuickPick(
       [
         { label: 'Change screen', action: 'screen' },
@@ -545,10 +545,10 @@ function registerConverter(context) {
   })
   context.subscriptions.push(settingsCmd)
 
-  statusItem.command = 'priwattViewport.viewportSettingsQuick'
+  statusItem.command = 'viewportConverter.viewportSettingsQuick'
   quickConvertItem.text = '$(wand) Convert Here'
   quickConvertItem.tooltip = 'Convert values at cursor/selection to current viewport axis'
-  quickConvertItem.command = 'priwattViewport.convertHereQuick'
+  quickConvertItem.command = 'viewportConverter.convertHereQuick'
 
   function updateStatusBarVisibility() {
     const cfg = getConfig()
@@ -567,19 +567,19 @@ function registerConverter(context) {
 
   const configWatcher = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration('priwattViewport.lastUsedScreen') ||
-      event.affectsConfiguration('priwattViewport.baseFontSize') ||
-      event.affectsConfiguration('priwattViewport.viewportPrecision')
+      event.affectsConfiguration('viewportConverter.lastUsedScreen') ||
+      event.affectsConfiguration('viewportConverter.baseFontSize') ||
+      event.affectsConfiguration('viewportConverter.viewportPrecision')
     ) {
       updateStatus()
     }
-    if (event.affectsConfiguration('priwattViewport.showViewportStatusBar')) {
+    if (event.affectsConfiguration('viewportConverter.showViewportStatusBar')) {
       updateStatusBarVisibility()
     }
   })
   context.subscriptions.push(configWatcher)
 
-  const quickConvertCmd = vscode.commands.registerCommand('priwattViewport.convertHereQuick', async () => {
+  const quickConvertCmd = vscode.commands.registerCommand('viewportConverter.convertHereQuick', async () => {
     const cfg = getConfig()
     const screens = cfg.get('viewportScreens', [])
     const precision = cfg.get('viewportPrecision', 4)
@@ -593,7 +593,7 @@ function registerConverter(context) {
     const lastScreen = cfg.get('lastUsedScreen', '1440x900')
     const parsed = parseScreen(lastScreen)
     if (!parsed) {
-      vscode.window.showErrorMessage('Invalid priwattViewport.lastUsedScreen setting.')
+      vscode.window.showErrorMessage('Invalid viewportConverter.lastUsedScreen setting.')
       return
     }
 

@@ -17,7 +17,7 @@ async function readPackageJson(uri) {
     const text = Buffer.from(bytes).toString('utf8')
     return parse(text)
   } catch (error) {
-    vscode.window.showErrorMessage(`Priwatt Script Runner: invalid or unreadable package.json at ${uri.fsPath}`)
+    vscode.window.showErrorMessage(`Script Runner: invalid or unreadable package.json at ${uri.fsPath}`)
     return null
   }
 }
@@ -66,10 +66,10 @@ function createTask(folder, pm, name) {
   })
 
   const task = new vscode.Task(
-    { type: 'priwattScriptRunner', script: name, pm, folderPath: folder.uri.fsPath },
+    { type: 'scriptRunner', script: name, pm, folderPath: folder.uri.fsPath },
     folder,
     `run ${name}`,
-    'Priwatt Script Runner',
+    'Script Runner',
     execution,
     []
   )
@@ -91,7 +91,7 @@ async function terminateExistingIfNeeded(folder, name, pm) {
     try {
       const def = execution.task.definition
       if (
-        def?.type === 'priwattScriptRunner' &&
+        def?.type === 'scriptRunner' &&
         def.script === name &&
         def.pm === pm &&
         def.folderPath === folder.uri.fsPath
@@ -186,7 +186,7 @@ function registerScriptCommands(context) {
     let priority = 110
 
     const makeCommandId = (entry) =>
-      `priwattScriptRunner.runScript.${slugify((entry.folder?.name || 'pick') + ':' + entry.name)}`
+      `scriptRunner.runScript.${slugify((entry.folder?.name || 'pick') + ':' + entry.name)}`
 
     const runEntry = async (entry) => {
       try {
@@ -213,7 +213,7 @@ function registerScriptCommands(context) {
         const task = createTask(folder, pm, entry.name)
         await vscode.tasks.executeTask(task)
       } catch (error) {
-        vscode.window.showErrorMessage(`Priwatt Script Runner: failed to run ${entry.name}. ${error.message}`)
+        vscode.window.showErrorMessage(`Script Runner: failed to run ${entry.name}. ${error.message}`)
       }
     }
 
@@ -249,7 +249,7 @@ function registerScriptCommands(context) {
       overflowItem.text = `$(ellipsis) +${overflow.length}`
       overflowItem.tooltip = 'More scripts'
 
-      const overflowCommandId = 'priwattScriptRunner.runScript._overflow'
+      const overflowCommandId = 'scriptRunner.runScript._overflow'
       const overflowCmd = vscode.commands.registerCommand(overflowCommandId, async () => {
         try {
           const pick = await vscode.window.showQuickPick(
@@ -263,7 +263,7 @@ function registerScriptCommands(context) {
           if (!pick) return
           await runEntry(pick.entry)
         } catch (error) {
-          vscode.window.showErrorMessage(`Priwatt Script Runner: failed to run script. ${error.message}`)
+          vscode.window.showErrorMessage(`Script Runner: failed to run script. ${error.message}`)
         }
       })
       registeredCommands.push(overflowCmd)
@@ -286,13 +286,13 @@ function registerScriptCommands(context) {
   }
 
   const stopCommand = vscode.commands.registerCommand(
-    'priwattScriptRunner.stopRunningScripts',
+    'scriptRunner.stopRunningScripts',
     async () => {
       const executions = [...vscode.tasks.taskExecutions].filter(
-        (execution) => execution.task.definition?.type === 'priwattScriptRunner'
+        (execution) => execution.task.definition?.type === 'scriptRunner'
       )
       if (!executions.length) {
-        vscode.window.showInformationMessage('Priwatt Script Runner: no running scripts')
+        vscode.window.showInformationMessage('Script Runner: no running scripts')
         return
       }
       const pick = await vscode.window.showWarningMessage(
@@ -325,12 +325,12 @@ function registerScriptCommands(context) {
 
   const configListener = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration('priwattScriptRunner.useDynamicScriptParsing') ||
-      event.affectsConfiguration('priwattScriptRunner.excludeScripts') ||
-      event.affectsConfiguration('priwattScriptRunner.maxDynamicScriptButtons') ||
-      event.affectsConfiguration('priwattScriptRunner.reuseTerminalForScripts') ||
-      event.affectsConfiguration('priwattScriptRunner.workspaceMode') ||
-      event.affectsConfiguration('priwattScriptRunner.askBeforeKill')
+      event.affectsConfiguration('scriptRunner.useDynamicScriptParsing') ||
+      event.affectsConfiguration('scriptRunner.excludeScripts') ||
+      event.affectsConfiguration('scriptRunner.maxDynamicScriptButtons') ||
+      event.affectsConfiguration('scriptRunner.reuseTerminalForScripts') ||
+      event.affectsConfiguration('scriptRunner.workspaceMode') ||
+      event.affectsConfiguration('scriptRunner.askBeforeKill')
     ) {
       applyVisibility()
     }

@@ -1,4 +1,4 @@
-# Priwatt Env Switcher
+# Env Switcher
 
 Quickly toggle between WordPress environment blocks inside a `.env` file. The extension scans your env file for comment headings (e.g. `# TEST 1`) and comments/uncomments associated variables.
 
@@ -10,9 +10,9 @@ Quickly toggle between WordPress environment blocks inside a `.env` file. The ex
 - Optional setting to hide the status bar button entirely
 
 ## Commands
-- `priwattEnvSwitcher.select`: open the environment picker
+- `envSwitcher.select`: open the environment picker
 
-## Settings (`priwattEnvSwitcher`)
+## Settings (`envSwitcher`)
 - `envSwitcherFile`: path to the env file (default `.env.local`; supports relative and `~/` paths)
 - `showEnvSwitcher`: toggle the status bar button
 

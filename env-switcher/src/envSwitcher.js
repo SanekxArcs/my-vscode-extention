@@ -87,7 +87,7 @@ function toTooltip(activeName, uri, count) {
 
 function registerEnvSwitcher(context) {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 103)
-  item.command = 'priwattEnvSwitcher.select'
+  item.command = 'envSwitcher.select'
   item.accessibilityInformation = { label: 'WordPress environment switcher' }
   context.subscriptions.push(item)
 
@@ -142,7 +142,7 @@ function registerEnvSwitcher(context) {
 
   async function selectEnvironment() {
     if (!currentUri) {
-      vscode.window.showWarningMessage('Priwatt Env Switcher: no workspace env file configured.')
+      vscode.window.showWarningMessage('Env Switcher: no workspace env file configured.')
       return
     }
     if (!cachedParse) {
@@ -152,7 +152,7 @@ function registerEnvSwitcher(context) {
 
     const { blocks, activeName } = cachedParse
     if (!blocks.length) {
-      vscode.window.showWarningMessage('Priwatt Env Switcher: no environment blocks found.')
+      vscode.window.showWarningMessage('Env Switcher: no environment blocks found.')
       return
     }
 
@@ -176,7 +176,7 @@ function registerEnvSwitcher(context) {
     const parsed = parseEnvFile(text)
     const target = parsed.blocks.find((block) => block.name === selection.label)
     if (!target) {
-      vscode.window.showErrorMessage(`Priwatt Env Switcher: block '${selection.label}' disappeared.`)
+      vscode.window.showErrorMessage(`Env Switcher: block '${selection.label}' disappeared.`)
       await updateStatus()
       return
     }
@@ -201,7 +201,7 @@ function registerEnvSwitcher(context) {
       await writeEnvFile(currentUri, newContent)
       vscode.window.setStatusBarMessage(`Environment switched to ${selection.label}`, 2500)
     } catch (error) {
-      vscode.window.showErrorMessage(`Priwatt Env Switcher: failed to update file. ${error.message}`)
+      vscode.window.showErrorMessage(`Env Switcher: failed to update file. ${error.message}`)
     }
 
     await updateStatus()
@@ -218,13 +218,13 @@ function registerEnvSwitcher(context) {
   }
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('priwattEnvSwitcher.select', selectEnvironment),
+    vscode.commands.registerCommand('envSwitcher.select', selectEnvironment),
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('priwattEnvSwitcher.envSwitcherFile')) {
+      if (event.affectsConfiguration('envSwitcher.envSwitcherFile')) {
         ensureWatcher()
         updateStatus()
       }
-      if (event.affectsConfiguration('priwattEnvSwitcher.showEnvSwitcher')) {
+      if (event.affectsConfiguration('envSwitcher.showEnvSwitcher')) {
         updateStatusBarVisibility()
       }
     }),

@@ -1,8 +1,8 @@
 const vscode = require('vscode')
 const { getConfig } = require('./config')
 
-const GLOBAL_LAST_COMMAND_KEY = 'priwattGitTerminal.lastCommand'
-const GLOBAL_HISTORY_KEY = 'priwattGitTerminal.history'
+const GLOBAL_LAST_COMMAND_KEY = 'gitTerminal.lastCommand'
+const GLOBAL_HISTORY_KEY = 'gitTerminal.history'
 
 function shellEscapePosix(input) {
   if (input == null) return ''
@@ -168,7 +168,7 @@ function registerGitTerminal(context) {
         finishStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95)
         finishStatusItem.text = '$(arrow-right) Finish snippet'
         finishStatusItem.tooltip = 'Finish current custom snippet'
-        finishStatusItem.command = 'priwattGitTerminal.finishSnippet'
+        finishStatusItem.command = 'gitTerminal.finishSnippet'
         context.subscriptions.push(finishStatusItem)
       }
       finishStatusItem.show()
@@ -199,7 +199,7 @@ function registerGitTerminal(context) {
     statusItem.text = '$(terminal) ' + buttonLabel
     statusItem.tooltip = 'Open saved commands'
 
-    const quickPickCommandId = 'priwattGitTerminal._quickPick'
+    const quickPickCommandId = 'gitTerminal._quickPick'
     const quickPickDisposable = vscode.commands.registerCommand(quickPickCommandId, async () => {
       try {
         const picks = customEntries
@@ -218,16 +218,16 @@ function registerGitTerminal(context) {
         await runCustomEntry(entry)
         await updatePinned()
       } catch (error) {
-        vscode.window.showErrorMessage(`Priwatt Git Terminal: ${error.message}`)
+        vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
       }
     })
     disposables.push(quickPickDisposable)
     context.subscriptions.push(quickPickDisposable)
 
-    const openCmd = vscode.commands.registerCommand('priwattGitTerminal.openCommands', async () => {
+    const openCmd = vscode.commands.registerCommand('gitTerminal.openCommands', async () => {
       await vscode.commands.executeCommand(quickPickCommandId)
     })
-    const runLastCmd = vscode.commands.registerCommand('priwattGitTerminal.runLastCommand', async () => {
+    const runLastCmd = vscode.commands.registerCommand('gitTerminal.runLastCommand', async () => {
       if (!cachedLastCommand) {
         vscode.window.showInformationMessage('No last custom command yet. Pick one first.')
         return
@@ -258,7 +258,7 @@ function registerGitTerminal(context) {
       pinnedItem.text = `${prefix} ${cachedLastCommand.title}`
       pinnedItem.tooltip = `Run last custom: ${cachedLastCommand.command}`
 
-      const pinCommandId = 'priwattGitTerminal._runPinned'
+      const pinCommandId = 'gitTerminal._runPinned'
       try {
         const existing = await vscode.commands.getCommands(true)
         if (!existing.includes(pinCommandId)) {
@@ -267,7 +267,7 @@ function registerGitTerminal(context) {
               await runCustomEntry(cachedLastCommand)
               await updatePinned()
             } catch (error) {
-              vscode.window.showErrorMessage(`Priwatt Git Terminal: ${error.message}`)
+              vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
             }
           })
           disposables.push(pinDisposable)
@@ -280,7 +280,7 @@ function registerGitTerminal(context) {
               await runCustomEntry(cachedLastCommand)
               await updatePinned()
             } catch (error) {
-              vscode.window.showErrorMessage(`Priwatt Git Terminal: ${error.message}`)
+              vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
             }
           })
           disposables.push(pinDisposable)
@@ -299,7 +299,7 @@ function registerGitTerminal(context) {
     return { updatePinned }
   }
 
-  const finishSnippet = vscode.commands.registerCommand('priwattGitTerminal.finishSnippet', async () => {
+  const finishSnippet = vscode.commands.registerCommand('gitTerminal.finishSnippet', async () => {
     if (!pendingSnippet) {
       vscode.window.showInformationMessage('No pending snippet.')
       return
@@ -315,7 +315,7 @@ function registerGitTerminal(context) {
   })
   context.subscriptions.push(finishSnippet)
 
-  const historyCommand = vscode.commands.registerCommand('priwattGitTerminal.history', async () => {
+  const historyCommand = vscode.commands.registerCommand('gitTerminal.history', async () => {
     const history = context.globalState.get(GLOBAL_HISTORY_KEY, [])
     if (!history.length) {
       vscode.window.showInformationMessage('No history yet.')
@@ -338,16 +338,16 @@ function registerGitTerminal(context) {
 
   const onConfigChange = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration('priwattGitTerminal.customTerminals') ||
-      event.affectsConfiguration('priwattGitTerminal.customTerminalsButtonLabel') ||
-      event.affectsConfiguration('priwattGitTerminal.pinLastCustomTerminal') ||
-      event.affectsConfiguration('priwattGitTerminal.pinLastCustomTerminalLabelPrefix') ||
-      event.affectsConfiguration('priwattGitTerminal.cursorSymbol') ||
-      event.affectsConfiguration('priwattGitTerminal.showPreviewForCustomTerminals') ||
-      event.affectsConfiguration('priwattGitTerminal.reuseTerminalByTitle') ||
-      event.affectsConfiguration('priwattGitTerminal.customHistorySize') ||
-      event.affectsConfiguration('priwattGitTerminal.confirmDangerousCommands') ||
-      event.affectsConfiguration('priwattGitTerminal.showStatusBar')
+      event.affectsConfiguration('gitTerminal.customTerminals') ||
+      event.affectsConfiguration('gitTerminal.customTerminalsButtonLabel') ||
+      event.affectsConfiguration('gitTerminal.pinLastCustomTerminal') ||
+      event.affectsConfiguration('gitTerminal.pinLastCustomTerminalLabelPrefix') ||
+      event.affectsConfiguration('gitTerminal.cursorSymbol') ||
+      event.affectsConfiguration('gitTerminal.showPreviewForCustomTerminals') ||
+      event.affectsConfiguration('gitTerminal.reuseTerminalByTitle') ||
+      event.affectsConfiguration('gitTerminal.customHistorySize') ||
+      event.affectsConfiguration('gitTerminal.confirmDangerousCommands') ||
+      event.affectsConfiguration('gitTerminal.showStatusBar')
     ) {
       buildCustomTerminalButtons()
     }

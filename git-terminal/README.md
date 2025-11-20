@@ -1,4 +1,4 @@
-# Priwatt Git Terminal
+# Git Terminal
 
 Create reusable terminal snippets with placeholders, history, and status bar shortcuts. Ideal for git flows or any frequently executed shell command.
 
@@ -11,12 +11,12 @@ Create reusable terminal snippets with placeholders, history, and status bar sho
 - OS-specific filtering and per-command working directories
 
 ## Commands
-- `priwattGitTerminal.openCommands`
-- `priwattGitTerminal.runLastCommand`
-- `priwattGitTerminal.finishSnippet`
-- `priwattGitTerminal.history`
+- `gitTerminal.openCommands`
+- `gitTerminal.runLastCommand`
+- `gitTerminal.finishSnippet`
+- `gitTerminal.history`
 
-## Settings (`priwattGitTerminal`)
+## Settings (`gitTerminal`)
 - `customTerminals`: array of `{ title, command }` objects with optional `cwd`, `reuse`, and `os`
 - `customTerminalsButtonLabel`: label for the status bar button
 - `cursorSymbol`: marker used to split interactive snippets
@@ -31,4 +31,4 @@ Create reusable terminal snippets with placeholders, history, and status bar sho
 ## Development
 1. `npm install` (only needed if dependencies are added later; none by default).
 2. Launch an Extension Development Host (`F5`).
-3. Configure commands under Settings → Priwatt Git Terminal.
+3. Configure commands under Settings → Git Terminal.

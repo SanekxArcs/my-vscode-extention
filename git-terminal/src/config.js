@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'priwattGitTerminal'
+const CONFIG_SECTION = 'gitTerminal'
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)

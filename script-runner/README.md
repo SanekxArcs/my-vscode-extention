@@ -1,4 +1,4 @@
-# Priwatt Script Runner
+# Script Runner
 
 Status bar buttons for the scripts defined in your workspace `package.json`. Detects the package manager automatically and executes commands via the VS Code Tasks API. Includes a stop command for quickly terminating running tasks.
 
@@ -10,10 +10,10 @@ Status bar buttons for the scripts defined in your workspace `package.json`. Det
 - Stop-all command for currently running script tasks
 
 ## Commands
-- `Priwatt Script Runner: Stop Running Scripts` (`priwattScriptRunner.stopRunningScripts`)
+- `Script Runner: Stop Running Scripts` (`scriptRunner.stopRunningScripts`)
 
 ## Settings
-All settings live under the `priwattScriptRunner` namespace.
+All settings live under the `scriptRunner` namespace.
 - `useDynamicScriptParsing`: enable or disable dynamic buttons
 - `workspaceMode`: choose how multi-root workspaces are handled (`first`, `pick`, `all`)
 - `excludeScripts`: list of script names to hide

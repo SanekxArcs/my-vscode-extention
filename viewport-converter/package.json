@@ -1,6 +1,6 @@
 {
-  "name": "priwatt-viewport-converter",
-  "displayName": "Priwatt Viewport Converter",
+  "name": "viewport-converter",
+  "displayName": "Viewport Converter",
   "description": "Convert CSS length units between px/rem and vw/vh with smart status bar utilities.",
   "version": "0.0.1",
   "publisher": "local",
@@ -11,71 +11,71 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:priwattViewport.convertToViewportUnit",
-    "onCommand:priwattViewport.reverseConvertFromViewportUnit",
-    "onCommand:priwattViewport.convertHereQuick",
-    "onCommand:priwattViewport.convertCycleVW",
-    "onCommand:priwattViewport.convertCycleVH",
-    "onCommand:priwattViewport.cycleViewportScreen",
-    "onCommand:priwattViewport.viewportSettingsQuick"
+    "onCommand:viewportConverter.convertToViewportUnit",
+    "onCommand:viewportConverter.reverseConvertFromViewportUnit",
+    "onCommand:viewportConverter.convertHereQuick",
+    "onCommand:viewportConverter.convertCycleVW",
+    "onCommand:viewportConverter.convertCycleVH",
+    "onCommand:viewportConverter.cycleViewportScreen",
+    "onCommand:viewportConverter.viewportSettingsQuick"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "priwattViewport.convertToViewportUnit",
-        "title": "Priwatt Viewport Converter: Convert CSS unit to vw/vh"
+        "command": "viewportConverter.convertToViewportUnit",
+        "title": "Viewport Converter: Convert CSS unit to vw/vh"
       },
       {
-        "command": "priwattViewport.reverseConvertFromViewportUnit",
-        "title": "Priwatt Viewport Converter: Convert vw/vh to px/rem"
+        "command": "viewportConverter.reverseConvertFromViewportUnit",
+        "title": "Viewport Converter: Convert vw/vh to px/rem"
       },
       {
-        "command": "priwattViewport.convertHereQuick",
-        "title": "Priwatt Viewport Converter: Convert Selection"
+        "command": "viewportConverter.convertHereQuick",
+        "title": "Viewport Converter: Convert Selection"
       },
       {
-        "command": "priwattViewport.convertCycleVW",
-        "title": "Priwatt Viewport Converter: Convert Cycle (vw)"
+        "command": "viewportConverter.convertCycleVW",
+        "title": "Viewport Converter: Convert Cycle (vw)"
       },
       {
-        "command": "priwattViewport.convertCycleVH",
-        "title": "Priwatt Viewport Converter: Convert Cycle (vh)"
+        "command": "viewportConverter.convertCycleVH",
+        "title": "Viewport Converter: Convert Cycle (vh)"
       },
       {
-        "command": "priwattViewport.cycleViewportScreen",
-        "title": "Priwatt Viewport Converter: Cycle Viewport Screen"
+        "command": "viewportConverter.cycleViewportScreen",
+        "title": "Viewport Converter: Cycle Viewport Screen"
       },
       {
-        "command": "priwattViewport.viewportSettingsQuick",
-        "title": "Priwatt Viewport Converter: Viewport Settings"
+        "command": "viewportConverter.viewportSettingsQuick",
+        "title": "Viewport Converter: Viewport Settings"
       }
     ],
     "keybindings": [
       {
-        "command": "priwattViewport.convertToViewportUnit",
+        "command": "viewportConverter.convertToViewportUnit",
         "key": "ctrl+alt+v",
         "mac": "cmd+alt+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "priwattViewport.reverseConvertFromViewportUnit",
+        "command": "viewportConverter.reverseConvertFromViewportUnit",
         "key": "ctrl+alt+shift+v",
         "mac": "cmd+alt+shift+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "priwattViewport.convertCycleVW",
+        "command": "viewportConverter.convertCycleVW",
         "key": "alt+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "priwattViewport.convertCycleVH",
+        "command": "viewportConverter.convertCycleVH",
         "key": "alt+h",
         "when": "editorTextFocus"
       },
       {
-        "command": "priwattViewport.cycleViewportScreen",
+        "command": "viewportConverter.cycleViewportScreen",
         "key": "alt+x",
         "when": "editorTextFocus || editorFocus"
       }
@@ -96,21 +96,21 @@
           {
             "kind": "refactor.rewrite.viewport",
             "title": "Convert to vw/vh",
-            "command": "priwattViewport.convertToViewportUnit"
+            "command": "viewportConverter.convertToViewportUnit"
           },
           {
             "kind": "refactor.rewrite.viewport.reverse",
             "title": "Convert vw/vh to px/rem",
-            "command": "priwattViewport.reverseConvertFromViewportUnit"
+            "command": "viewportConverter.reverseConvertFromViewportUnit"
           }
         ]
       }
     ],
     "configuration": [
       {
-        "title": "Priwatt Viewport Converter",
+        "title": "Viewport Converter",
         "properties": {
-          "priwattViewport.viewportScreens": {
+          "viewportConverter.viewportScreens": {
             "type": "array",
             "items": {
               "type": "string"
@@ -135,20 +135,20 @@
             ],
             "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion."
           },
-          "priwattViewport.baseFontSize": {
+          "viewportConverter.baseFontSize": {
             "type": "number",
             "default": 16,
             "minimum": 1,
             "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
           },
-          "priwattViewport.viewportPrecision": {
+          "viewportConverter.viewportPrecision": {
             "type": "number",
             "default": 4,
             "minimum": 0,
             "maximum": 8,
             "description": "Number of decimal places to keep when converting to vw/vh."
           },
-          "priwattViewport.defaultOutputUnit": {
+          "viewportConverter.defaultOutputUnit": {
             "type": "string",
             "enum": [
               "px",
@@ -157,12 +157,12 @@
             "default": "px",
             "description": "Default unit for reverse conversion (vw/vh to px or rem)."
           },
-          "priwattViewport.autoDetectViewportAxis": {
+          "viewportConverter.autoDetectViewportAxis": {
             "type": "boolean",
             "default": true,
             "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
           },
-          "priwattViewport.lastUsedViewportUnit": {
+          "viewportConverter.lastUsedViewportUnit": {
             "type": "string",
             "enum": [
               "vw",
@@ -171,12 +171,12 @@
             "default": "vw",
             "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
           },
-          "priwattViewport.lastUsedScreen": {
+          "viewportConverter.lastUsedScreen": {
             "type": "string",
             "default": "1440x900",
             "description": "Last used screen resolution - automatically updated when you convert."
           },
-          "priwattViewport.showViewportStatusBar": {
+          "viewportConverter.showViewportStatusBar": {
             "type": "boolean",
             "default": true,
             "description": "Show the viewport screen, base font size, and precision status bar button."

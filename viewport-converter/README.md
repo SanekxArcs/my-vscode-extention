@@ -1,4 +1,4 @@
-# Priwatt Viewport Converter
+# Viewport Converter
 
 Convert CSS pixel/rem values into viewport units and back again directly from VS Code. Includes Tailwind utility cycling, status bar controls for common screen sizes, and QuickPick workflows for fast conversions.
 
@@ -11,16 +11,16 @@ Convert CSS pixel/rem values into viewport units and back again directly from VS
 - Code actions for in-place refactors across CSS and JavaScript files
 
 ## Commands
-- `priwattViewport.convertToViewportUnit`
-- `priwattViewport.reverseConvertFromViewportUnit`
-- `priwattViewport.convertHereQuick`
-- `priwattViewport.convertCycleVW`
-- `priwattViewport.convertCycleVH`
-- `priwattViewport.cycleViewportScreen`
-- `priwattViewport.viewportSettingsQuick`
-- `priwattViewport.cycleTailwindUnit`
+- `viewportConverter.convertToViewportUnit`
+- `viewportConverter.reverseConvertFromViewportUnit`
+- `viewportConverter.convertHereQuick`
+- `viewportConverter.convertCycleVW`
+- `viewportConverter.convertCycleVH`
+- `viewportConverter.cycleViewportScreen`
+- `viewportConverter.viewportSettingsQuick`
+- `viewportConverter.cycleTailwindUnit`
 
-## Settings (`priwattViewport`)
+## Settings (`viewportConverter`)
 - `viewportScreens`: list of WIDTHxHEIGHT entries to convert against
 - `baseFontSize`: base font size for rem ↔ px conversions
 - `viewportPrecision`: decimal precision for viewport conversions

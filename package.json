@@ -374,7 +374,7 @@
           "runScript.envSwitcherFile": {
             "type": "string",
             "default": ".env.local",
-            "description": "Path to the env file containing Priwatt WordPress endpoints. Relative paths resolve from the first workspace folder; supports ~/ expansion."
+            "description": "Path to the env file containing WordPress endpoints. Relative paths resolve from the first workspace folder; supports ~/ expansion."
           },
           "runScript.showEnvSwitcher": {
             "type": "boolean",
