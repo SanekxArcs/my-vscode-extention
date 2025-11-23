@@ -63,6 +63,20 @@
             "minimum": 0,
             "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
           },
+          "scriptRunner.scriptOrder": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "dev",
+              "start",
+              "build",
+              "test",
+              "lint"
+            ],
+            "description": "Priority order for scripts. Scripts listed here will appear first."
+          },
           "scriptRunner.reuseTerminalForScripts": {
             "type": "boolean",
             "default": true,

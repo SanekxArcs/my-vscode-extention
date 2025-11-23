@@ -42,6 +42,7 @@ async function detectPackageManager(root, pkg) {
   if (await exists(path.join(root, 'pnpm-lock.yaml'))) return 'pnpm'
   if (await exists(path.join(root, 'yarn.lock'))) return 'yarn'
   if (await exists(path.join(root, 'bun.lockb'))) return 'bun'
+  if (await exists(path.join(root, 'bun.lock'))) return 'bun'
   return 'npm'
 }
 
@@ -144,7 +145,8 @@ function registerScriptCommands(context) {
     const maxButtonsSetting = cfg.get('maxDynamicScriptButtons', 8)
     const maxButtons = Math.max(0, Number(maxButtonsSetting)) || 8
 
-    const priorityMap = { dev: 3, start: 2, build: 1 }
+    const scriptOrder = cfg.get('scriptOrder', ['dev', 'start', 'build', 'test', 'lint'])
+    const priorityMap = new Map(scriptOrder.map((name, index) => [name, scriptOrder.length - index]))
     const collected = []
 
     const readScripts = async (folder) => {
@@ -154,7 +156,12 @@ function registerScriptCommands(context) {
       const pm = await detectPackageManager(folder.uri.fsPath, pkg)
       const entries = Object.entries(pkg.scripts || {})
         .filter(([name]) => !exclude.has(name))
-        .sort((a, b) => (priorityMap[b[0]] || 0) - (priorityMap[a[0]] || 0) || a[0].localeCompare(b[0]))
+        .sort((a, b) => {
+          const pA = priorityMap.get(a[0]) || 0
+          const pB = priorityMap.get(b[0]) || 0
+          if (pA !== pB) return pB - pA
+          return a[0].localeCompare(b[0])
+        })
       return entries.map(([name, command]) => ({ folder, pm, name, command }))
     }
 
@@ -175,7 +182,12 @@ function registerScriptCommands(context) {
         }
       }
       const merged = Array.from(unions.entries())
-      merged.sort((a, b) => (priorityMap[b[0]] || 0) - (priorityMap[a[0]] || 0) || a[0].localeCompare(b[0]))
+      merged.sort((a, b) => {
+        const pA = priorityMap.get(a[0]) || 0
+        const pB = priorityMap.get(b[0]) || 0
+        if (pA !== pB) return pB - pA
+        return a[0].localeCompare(b[0])
+      })
       for (const [name, variants] of merged) {
         collected.push({ name, command: variants[0].command, variants })
       }
