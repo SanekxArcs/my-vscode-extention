@@ -43,6 +43,10 @@
         "title": "Viewport Converter: Convert Cycle (vh)"
       },
       {
+        "command": "viewportConverter.cycleTailwindUnit",
+        "title": "Viewport Converter: Cycle Tailwind (px -> rem -> tw)"
+      },
+      {
         "command": "viewportConverter.cycleViewportScreen",
         "title": "Viewport Converter: Cycle Viewport Screen"
       },
@@ -72,6 +76,11 @@
       {
         "command": "viewportConverter.convertCycleVH",
         "key": "alt+h",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "viewportConverter.cycleTailwindUnit",
+        "key": "alt+z",
         "when": "editorTextFocus"
       },
       {
