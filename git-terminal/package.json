@@ -11,6 +11,7 @@
     "Other"
   ],
   "activationEvents": [
+      "activationEvents",
     "onCommand:gitTerminal.openCommands",
     "onCommand:gitTerminal.runLastCommand",
     "onCommand:gitTerminal.finishSnippet",
