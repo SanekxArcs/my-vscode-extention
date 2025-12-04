@@ -22,6 +22,12 @@
         "title": "Env Switcher: Select Environment"
       }
     ],
+    "keybindings": [
+      {
+        "command": "envSwitcher.select",
+        "key": "ctrl+alt+shift+q"
+      }
+    ],
     "configuration": [
       {
         "title": "Env Switcher",
