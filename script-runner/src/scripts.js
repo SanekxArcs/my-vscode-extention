@@ -22,6 +22,16 @@ async function readPackageJson(uri) {
   }
 }
 
+async function checkNvmrcExists(root) {
+  try {
+    const nvmrcPath = path.join(root, ".nvmrc");
+    await vscode.workspace.fs.stat(vscode.Uri.file(nvmrcPath));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function detectPackageManager(root, pkg) {
   const pmField = pkg?.packageManager
   if (typeof pmField === 'string') {
@@ -46,42 +56,47 @@ async function detectPackageManager(root, pkg) {
   return 'npm'
 }
 
-function getRunCommand(pm, name) {
+function getRunCommand(pm, name, hasNvmrc = false) {
+  let command = "";
+  if (hasNvmrc) {
+    command = "nvm use && ";
+  }
+
   switch (pm) {
-    case 'pnpm':
-      return `pnpm run ${name}`
-    case 'yarn':
-      return `yarn ${name}`
-    case 'bun':
-      return `bun run ${name}`
+    case "pnpm":
+      return command + `pnpm run ${name}`;
+    case "yarn":
+      return command + `yarn ${name}`;
+    case "bun":
+      return command + `bun run ${name}`;
     default:
-      return `npm run ${name}`
+      return command + `npm run ${name}`;
   }
 }
 
-function createTask(folder, pm, name) {
-  const shellCmd = getRunCommand(pm, name)
+function createTask(folder, pm, name, hasNvmrc = false) {
+  const shellCmd = getRunCommand(pm, name, hasNvmrc);
   const execution = new vscode.ShellExecution(shellCmd, {
     cwd: folder.uri.fsPath,
     env: process.env,
-  })
+  });
 
   const task = new vscode.Task(
-    { type: 'scriptRunner', script: name, pm, folderPath: folder.uri.fsPath },
+    { type: "scriptRunner", script: name, pm, folderPath: folder.uri.fsPath },
     folder,
     `run ${name}`,
-    'Script Runner',
+    "Script Runner",
     execution,
     []
-  )
+  );
 
   task.presentationOptions = {
     reveal: vscode.TaskRevealKind.Always,
     clear: false,
     panel: vscode.TaskPanelKind.Dedicated,
-  }
+  };
 
-  return task
+  return task;
 }
 
 async function terminateExistingIfNeeded(folder, name, pm) {
@@ -154,6 +169,7 @@ function registerScriptCommands(context) {
       const pkg = await readPackageJson(pkgUri)
       if (!pkg) return []
       const pm = await detectPackageManager(folder.uri.fsPath, pkg)
+      const hasNvmrc = await checkNvmrcExists(folder.uri.fsPath);
       const entries = Object.entries(pkg.scripts || {})
         .filter(([name]) => !exclude.has(name))
         .sort((a, b) => {
@@ -162,7 +178,13 @@ function registerScriptCommands(context) {
           if (pA !== pB) return pB - pA
           return a[0].localeCompare(b[0])
         })
-      return entries.map(([name, command]) => ({ folder, pm, name, command }))
+      return entries.map(([name, command]) => ({
+        folder,
+        pm,
+        name,
+        command,
+        hasNvmrc,
+      }));
     }
 
     if (workspaceMode === 'first') {
@@ -204,6 +226,7 @@ function registerScriptCommands(context) {
       try {
         let folder = entry.folder
         let pm = entry.pm
+        let hasNvmrc = entry.hasNvmrc;
 
         if (!folder && Array.isArray(entry.variants)) {
           const pick = await vscode.window.showQuickPick(
@@ -217,12 +240,13 @@ function registerScriptCommands(context) {
           if (!pick) return
           folder = pick.variant.folder
           pm = pick.variant.pm
+          hasNvmrc = pick.variant.hasNvmrc;
         }
 
         if (!folder) return
         const shouldRun = await terminateExistingIfNeeded(folder, entry.name, pm)
         if (!shouldRun) return
-        const task = createTask(folder, pm, entry.name)
+        const task = createTask(folder, pm, entry.name, hasNvmrc);
         await vscode.tasks.executeTask(task)
       } catch (error) {
         vscode.window.showErrorMessage(`Script Runner: failed to run ${entry.name}. ${error.message}`)

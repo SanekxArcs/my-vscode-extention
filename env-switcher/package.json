@@ -2,7 +2,7 @@
   "name": "env-switcher",
   "displayName": "Env Switcher",
   "description": "Toggle WordPress environment blocks inside .env files directly from the VS Code status bar.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "local",
   "engines": {
     "vscode": "^1.60.0"
