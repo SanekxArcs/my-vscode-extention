@@ -59,7 +59,7 @@ async function detectPackageManager(root, pkg) {
 function getRunCommand(pm, name, hasNvmrc = false) {
   let command = "";
   if (hasNvmrc) {
-    command = "nvm use && ";
+    command = ". ~/.nvm/nvm.sh && nvm use && ";
   }
 
   switch (pm) {
@@ -133,6 +133,7 @@ async function terminateExistingIfNeeded(folder, name, pm) {
 function registerScriptCommands(context) {
   let statusItems = []
   let registeredCommands = []
+  let lastCollected = []
 
   const disposeAll = () => {
     for (const item of statusItems) {
@@ -219,6 +220,8 @@ function registerScriptCommands(context) {
     const overflow = collected.slice(maxButtons)
     let priority = 110
 
+    lastCollected = collected
+
     const makeCommandId = (entry) =>
       `scriptRunner.runScript.${slugify((entry.folder?.name || 'pick') + ':' + entry.name)}`
 
@@ -262,8 +265,7 @@ function registerScriptCommands(context) {
           : entry.name.includes('start')
             ? '$(rocket)'
             : '$(terminal)'
-      const prefix = entry.folder ? `[${entry.folder.name}] ` : ''
-      item.text = `${icon} ${prefix}${entry.name}`
+      item.text = `${icon} ${entry.name}`
       const tooltipFolder = entry.folder ? ` [${entry.folder.name}]` : ''
       item.tooltip = `Run script${tooltipFolder}: ${entry.name} -> ${entry.command}`
 
@@ -289,7 +291,7 @@ function registerScriptCommands(context) {
       const overflowCmd = vscode.commands.registerCommand(overflowCommandId, async () => {
         try {
           const pick = await vscode.window.showQuickPick(
-            overflow.map((entry) => ({
+            collected.map((entry) => ({
               label: entry.name,
               description: entry.folder ? entry.folder.name : 'pick folder on run',
               entry,
@@ -347,6 +349,27 @@ function registerScriptCommands(context) {
     }
   )
   context.subscriptions.push(stopCommand)
+
+  const showAllScriptsCommand = vscode.commands.registerCommand(
+    'scriptRunner.showAllScripts',
+    async () => {
+      try {
+        const pick = await vscode.window.showQuickPick(
+          lastCollected.map((entry) => ({
+            label: entry.name,
+            description: entry.folder ? entry.folder.name : 'pick folder on run',
+            entry,
+          })),
+          { placeHolder: 'Select a script to run' }
+        )
+        if (!pick) return
+        await runEntry(pick.entry)
+      } catch (error) {
+        vscode.window.showErrorMessage(`Script Runner: failed to run script. ${error.message}`)
+      }
+    }
+  )
+  context.subscriptions.push(showAllScriptsCommand)
 
   const watchPackageJson = () => {
     for (const folder of getWorkspaceFolders()) {

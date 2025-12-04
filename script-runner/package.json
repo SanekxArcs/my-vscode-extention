@@ -24,6 +24,16 @@
       {
         "command": "scriptRunner.stopRunningScripts",
         "title": "Script Runner: Stop Running Scripts"
+      },
+      {
+        "command": "scriptRunner.showAllScripts",
+        "title": "Script Runner: Show All Scripts"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "scriptRunner.showAllScripts",
+        "key": "ctrl+alt+q"
       }
     ],
     "configuration": [
