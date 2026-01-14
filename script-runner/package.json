@@ -1,19 +1,38 @@
 {
-  "name": "script-runner",
-  "displayName": "Script Runner",
-  "description": "Status bar buttons for package.json scripts with auto-detected package manager support.",
-  "version": "0.0.1",
-  "publisher": "local",
+  "name": "runmate",
+  "displayName": "RunMate",
+  "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
+  "version": "1.0.0",
+  "publisher": "SanekxArcs",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SanekxArcs/runmate"
+  },
+  "homepage": "https://github.com/SanekxArcs/runmate/blob/main/README.md",
+  "bugs": {
+    "url": "https://github.com/SanekxArcs/runmate/issues"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Productivity"
+  ],
+  "keywords": [
+    "npm",
+    "pnpm",
+    "yarn",
+    "bun",
+    "scripts",
+    "tasks",
+    "runner",
+    "quick-launch"
   ],
   "activationEvents": [
-    "workspaceContains:package.json",
-    "onStartupFinished",
-    "onCommand:scriptRunner.stopRunningScripts"
+    "workspaceContains:package.json"
   ],
   "main": "./extension.js",
   "dependencies": {
@@ -22,30 +41,30 @@
   "contributes": {
     "commands": [
       {
-        "command": "scriptRunner.stopRunningScripts",
-        "title": "Script Runner: Stop Running Scripts"
+        "command": "runmate.stopRunningScripts",
+        "title": "RunMate: Stop Running Scripts"
       },
       {
-        "command": "scriptRunner.showAllScripts",
-        "title": "Script Runner: Show All Scripts"
+        "command": "runmate.showAllScripts",
+        "title": "RunMate: Show All Scripts"
       }
     ],
     "keybindings": [
       {
-        "command": "scriptRunner.showAllScripts",
+        "command": "runmate.showAllScripts",
         "key": "ctrl+alt+q"
       }
     ],
     "configuration": [
       {
-        "title": "Script Runner",
+        "title": "RunMate",
         "properties": {
-          "scriptRunner.useDynamicScriptParsing": {
+          "runmate.useDynamicScriptParsing": {
             "type": "boolean",
             "default": true,
             "description": "Enable dynamic status bar buttons generated from package.json scripts."
           },
-          "scriptRunner.workspaceMode": {
+          "runmate.workspaceMode": {
             "type": "string",
             "enum": [
               "first",
@@ -55,7 +74,7 @@
             "default": "first",
             "description": "How to handle multi-root workspaces when building buttons: first folder, pick per run, or all folders."
           },
-          "scriptRunner.excludeScripts": {
+          "runmate.excludeScripts": {
             "type": "array",
             "items": {
               "type": "string"
@@ -67,13 +86,13 @@
             ],
             "description": "List of scripts to ignore when generating status bar buttons."
           },
-          "scriptRunner.maxDynamicScriptButtons": {
+          "runmate.maxDynamicScriptButtons": {
             "type": "number",
             "default": 8,
             "minimum": 0,
             "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
           },
-          "scriptRunner.scriptOrder": {
+          "runmate.scriptOrder": {
             "type": "array",
             "items": {
               "type": "string"
@@ -87,12 +106,12 @@
             ],
             "description": "Priority order for scripts. Scripts listed here will appear first."
           },
-          "scriptRunner.reuseTerminalForScripts": {
+          "runmate.reuseTerminalForScripts": {
             "type": "boolean",
             "default": true,
             "description": "Reuse dedicated terminals per script instead of creating a new terminal each time."
           },
-          "scriptRunner.askBeforeKill": {
+          "runmate.askBeforeKill": {
             "type": "boolean",
             "default": true,
             "description": "Ask for confirmation before stopping a running script when re-running from the status bar."

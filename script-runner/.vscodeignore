@@ -1,0 +1,15 @@
+.git
+.gitignore
+.vscode
+node_modules
+*.vsix
+test/
+.editorconfig
+.eslintrc
+.prettierrc
+*.md
+!README.md
+screenshot.png
+screenshots/
+.DS_Store
+Thumbs.db

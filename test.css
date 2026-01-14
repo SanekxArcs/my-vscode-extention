@@ -1,0 +1,11 @@
+.test {
+    /* Test cases for Tailwind cycle (Alt+Z) */
+    padding: 6;      /* Should cycle to [24px] or [1.5rem] */
+    margin: 2;     /* Should cycle to [8px] or [0.5rem] (treating - as part of the match) */
+    width: [24px];  /* Should cycle to [1.5rem] or 6 */
+    height: [1.5rem]; /* Should cycle to 6 or [24px] */
+    
+    /* Current problematic cases */
+    p-6: 6;         /* Cursor here, should be p-[24px] -> p-[1.5rem] -> p-6 */
+    -m-2: 2;        /* Cursor here, should be -m-[8px] -> -m-[0.5rem] -> -m-2 */
+}

@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'scriptRunner'
+const CONFIG_SECTION = "runmate";
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)

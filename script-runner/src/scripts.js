@@ -17,7 +17,9 @@ async function readPackageJson(uri) {
     const text = Buffer.from(bytes).toString('utf8')
     return parse(text)
   } catch (error) {
-    vscode.window.showErrorMessage(`Script Runner: invalid or unreadable package.json at ${uri.fsPath}`)
+        vscode.window.showErrorMessage(
+          `RunMate: invalid or unreadable package.json at ${uri.fsPath}`
+        );
     return null
   }
 }
@@ -82,10 +84,10 @@ function createTask(folder, pm, name, hasNvmrc = false) {
   });
 
   const task = new vscode.Task(
-    { type: "scriptRunner", script: name, pm, folderPath: folder.uri.fsPath },
+    { type: "runmate", script: name, pm, folderPath: folder.uri.fsPath },
     folder,
     `run ${name}`,
-    "Script Runner",
+    "RunMate",
     execution,
     []
   );
@@ -107,7 +109,7 @@ async function terminateExistingIfNeeded(folder, name, pm) {
     try {
       const def = execution.task.definition
       if (
-        def?.type === 'scriptRunner' &&
+        def?.type === "runmate" &&
         def.script === name &&
         def.pm === pm &&
         def.folderPath === folder.uri.fsPath
@@ -116,11 +118,11 @@ async function terminateExistingIfNeeded(folder, name, pm) {
           const pick = await vscode.window.showWarningMessage(
             `Stop running script ${name} in ${folder.name}?`,
             { modal: true },
-            'Stop'
-          )
-          if (pick !== 'Stop') return false
+            "Stop"
+          );
+          if (pick !== "Stop") return false;
         }
-        await execution.terminate()
+        await execution.terminate();
       }
     } catch {
       // ignore race conditions
@@ -223,7 +225,9 @@ function registerScriptCommands(context) {
     lastCollected = collected
 
     const makeCommandId = (entry) =>
-      `scriptRunner.runScript.${slugify((entry.folder?.name || 'pick') + ':' + entry.name)}`
+      `runmate.runScript.${slugify(
+        (entry.folder?.name || "pick") + ":" + entry.name
+      )}`;
 
     const runEntry = async (entry) => {
       try {
@@ -252,7 +256,9 @@ function registerScriptCommands(context) {
         const task = createTask(folder, pm, entry.name, hasNvmrc);
         await vscode.tasks.executeTask(task)
       } catch (error) {
-        vscode.window.showErrorMessage(`Script Runner: failed to run ${entry.name}. ${error.message}`)
+        vscode.window.showErrorMessage(
+          `RunMate: failed to run ${entry.name}. ${error.message}`
+        );
       }
     }
 
@@ -287,7 +293,7 @@ function registerScriptCommands(context) {
       overflowItem.text = `$(ellipsis) +${overflow.length}`
       overflowItem.tooltip = 'More scripts'
 
-      const overflowCommandId = 'scriptRunner.runScript._overflow'
+      const overflowCommandId = "runmate.runScript._overflow";
       const overflowCmd = vscode.commands.registerCommand(overflowCommandId, async () => {
         try {
           const pick = await vscode.window.showQuickPick(
@@ -301,7 +307,9 @@ function registerScriptCommands(context) {
           if (!pick) return
           await runEntry(pick.entry)
         } catch (error) {
-          vscode.window.showErrorMessage(`Script Runner: failed to run script. ${error.message}`)
+          vscode.window.showErrorMessage(
+            `RunMate: failed to run script. ${error.message}`
+          );
         }
       })
       registeredCommands.push(overflowCmd)
@@ -324,51 +332,55 @@ function registerScriptCommands(context) {
   }
 
   const stopCommand = vscode.commands.registerCommand(
-    'scriptRunner.stopRunningScripts',
+    "runmate.stopRunningScripts",
     async () => {
       const executions = [...vscode.tasks.taskExecutions].filter(
-        (execution) => execution.task.definition?.type === 'scriptRunner'
-      )
+        (execution) => execution.task.definition?.type === "runmate"
+      );
       if (!executions.length) {
-        vscode.window.showInformationMessage('Script Runner: no running scripts')
-        return
+        vscode.window.showInformationMessage("RunMate: no running scripts");
+        return;
       }
       const pick = await vscode.window.showWarningMessage(
         `Stop ${executions.length} running script(s)?`,
         { modal: true },
-        'Stop All'
-      )
-      if (pick !== 'Stop All') return
+        "Stop All"
+      );
+      if (pick !== "Stop All") return;
       for (const execution of executions) {
         try {
-          await execution.terminate()
+          await execution.terminate();
         } catch {
           // ignore
         }
       }
     }
-  )
+  );
   context.subscriptions.push(stopCommand)
 
   const showAllScriptsCommand = vscode.commands.registerCommand(
-    'scriptRunner.showAllScripts',
+    "runmate.showAllScripts",
     async () => {
       try {
         const pick = await vscode.window.showQuickPick(
           lastCollected.map((entry) => ({
             label: entry.name,
-            description: entry.folder ? entry.folder.name : 'pick folder on run',
+            description: entry.folder
+              ? entry.folder.name
+              : "pick folder on run",
             entry,
           })),
-          { placeHolder: 'Select a script to run' }
-        )
-        if (!pick) return
-        await runEntry(pick.entry)
+          { placeHolder: "Select a script to run" }
+        );
+        if (!pick) return;
+        await runEntry(pick.entry);
       } catch (error) {
-        vscode.window.showErrorMessage(`Script Runner: failed to run script. ${error.message}`)
+        vscode.window.showErrorMessage(
+          `RunMate: failed to run script. ${error.message}`
+        );
       }
     }
-  )
+  );
   context.subscriptions.push(showAllScriptsCommand)
 
   const watchPackageJson = () => {
@@ -384,14 +396,14 @@ function registerScriptCommands(context) {
 
   const configListener = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration('scriptRunner.useDynamicScriptParsing') ||
-      event.affectsConfiguration('scriptRunner.excludeScripts') ||
-      event.affectsConfiguration('scriptRunner.maxDynamicScriptButtons') ||
-      event.affectsConfiguration('scriptRunner.reuseTerminalForScripts') ||
-      event.affectsConfiguration('scriptRunner.workspaceMode') ||
-      event.affectsConfiguration('scriptRunner.askBeforeKill')
+      event.affectsConfiguration("runmate.useDynamicScriptParsing") ||
+      event.affectsConfiguration("runmate.excludeScripts") ||
+      event.affectsConfiguration("runmate.maxDynamicScriptButtons") ||
+      event.affectsConfiguration("runmate.reuseTerminalForScripts") ||
+      event.affectsConfiguration("runmate.workspaceMode") ||
+      event.affectsConfiguration("runmate.askBeforeKill")
     ) {
-      applyVisibility()
+      applyVisibility();
     }
   })
   context.subscriptions.push(configListener)
