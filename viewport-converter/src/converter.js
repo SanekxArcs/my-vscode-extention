@@ -94,6 +94,8 @@ function guessAxis(lineText) {
     const kebab = raw.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
     const widthProps = new Set([
       "width",
+      "min-width",
+      "max-width",
       "left",
       "right",
       "margin-left",
@@ -104,6 +106,9 @@ function guessAxis(lineText) {
       "margin-inline-end",
       "padding-inline-start",
       "padding-inline-end",
+      "inline-size",
+      "min-inline-size",
+      "max-inline-size",
       "gap",
       "column-gap",
       "letter-spacing",
@@ -114,6 +119,8 @@ function guessAxis(lineText) {
     ]);
     const heightProps = new Set([
       "height",
+      "min-height",
+      "max-height",
       "top",
       "bottom",
       "margin-top",
@@ -122,6 +129,9 @@ function guessAxis(lineText) {
       "padding-bottom",
       "line-height",
       "row-gap",
+      "block-size",
+      "min-block-size",
+      "max-block-size",
       "translatey",
     ]);
     if (widthProps.has(kebab)) return "vw";
@@ -164,13 +174,9 @@ function registerConverter(context, options = {}) {
         return;
       }
 
-      let vwOrVh = null;
       const autoAxis = cfg.get("autoDetectViewportAxis", true);
-      if (autoAxis) {
-        const pos = editor.selections[0]?.start || editor.selection.start;
-        vwOrVh = guessAxis(editor.document.lineAt(pos.line).text);
-      }
-      if (!vwOrVh) {
+      let vwOrVh = null;
+      if (!autoAxis) {
         vwOrVh = await vscode.window.showQuickPick(["vw", "vh"], {
           placeHolder: "Convert to vw or vh?",
           ignoreFocusOut: true,
@@ -218,6 +224,13 @@ function registerConverter(context, options = {}) {
       await editor.edit((editBuilder) => {
         for (const sel of selections) {
           let text = editor.document.getText(sel);
+          let currentAxis = vwOrVh;
+
+          if (autoAxis) {
+            currentAxis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
+          }
+
+          const denom = currentAxis === "vw" ? parsed.width : parsed.height;
 
           if (!text) {
             const hit = detectValueAtPosition(editor.document, sel.start);
@@ -237,7 +250,7 @@ function registerConverter(context, options = {}) {
                 : parsedValue.value;
             const result = toViewport(px, denom, precision);
             if (result == null) continue;
-            editBuilder.replace(range, `${result}${vwOrVh}`);
+            editBuilder.replace(range, `${result}${currentAxis}`);
             continue;
           }
 
@@ -250,7 +263,7 @@ function registerConverter(context, options = {}) {
               : parsedValue.value;
           const result = toViewport(px, denom, precision);
           if (result == null) continue;
-          editBuilder.replace(sel, `${result}${vwOrVh}`);
+          editBuilder.replace(sel, `${result}${currentAxis}`);
         }
       });
 
@@ -772,14 +785,8 @@ function registerConverter(context, options = {}) {
         return;
       }
 
-      let axis = "vw";
       const autoAxis = cfg.get("autoDetectViewportAxis", true);
-      if (autoAxis) {
-        const pos = editor.selections[0]?.start || editor.selection.start;
-        axis = guessAxis(editor.document.lineAt(pos.line).text) || "vw";
-      }
 
-      const denom = axis === "vw" ? parsed.width : parsed.height;
       const selections = editor.selections.length
         ? editor.selections
         : [editor.selection];
@@ -787,6 +794,12 @@ function registerConverter(context, options = {}) {
 
       await editor.edit((editBuilder) => {
         for (const sel of selections) {
+          let axis = "vw";
+          if (autoAxis) {
+            axis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
+          }
+
+          const denom = axis === "vw" ? parsed.width : parsed.height;
           const text = editor.document.getText(sel);
           if (!text) {
             const hit = detectValueAtPosition(editor.document, sel.start);

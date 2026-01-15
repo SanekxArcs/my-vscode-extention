@@ -108,13 +108,17 @@ function registerGitTerminal(context) {
       return match
     }
 
-    const regex = /\$\{([^}]+)\}/g
+    const regex = /(\\)?\$\{([^}]+)\}/g
     let match
     let output = ''
     let idx = 0
     while ((match = regex.exec(text)) !== null) {
       output += text.slice(idx, match.index)
-      output += await replaceToken(match[0], match[1])
+      if (match[1] === '\\') {
+        output += match[0].slice(1)
+      } else {
+        output += await replaceToken(match[0], match[2])
+      }
       idx = match.index + match[0].length
     }
     output += text.slice(idx)
@@ -222,21 +226,10 @@ function registerGitTerminal(context) {
       }
     })
     disposables.push(quickPickDisposable)
-    context.subscriptions.push(quickPickDisposable)
+    // context.subscriptions.push(quickPickDisposable) // Will be handled in registerGitTerminal
 
-    const openCmd = vscode.commands.registerCommand('gitTerminal.openCommands', async () => {
-      await vscode.commands.executeCommand(quickPickCommandId)
-    })
-    const runLastCmd = vscode.commands.registerCommand('gitTerminal.runLastCommand', async () => {
-      if (!cachedLastCommand) {
-        vscode.window.showInformationMessage('No last custom command yet. Pick one first.')
-        return
-      }
-      await runCustomEntry(cachedLastCommand)
-      await updatePinned()
-    })
-    disposables.push(openCmd, runLastCmd)
-    context.subscriptions.push(openCmd, runLastCmd)
+    // disposables.push(openCmd, runLastCmd)
+    // context.subscriptions.push(openCmd, runLastCmd)
 
     statusItem.command = quickPickCommandId
     statusItem.show()
@@ -296,8 +289,25 @@ function registerGitTerminal(context) {
 
     await updatePinned()
 
-    return { updatePinned }
+    return { updatePinned, quickPickCommandId }
   }
+
+  const openCmd = vscode.commands.registerCommand('gitTerminal.openCommands', async () => {
+    // We can't directy call buildCustomTerminalButtons internal quickPickCommandId easily 
+    // unless we store it. Let's make it a fixed ID or similar.
+    // Actually, buildCustomTerminalButtons defines it. Let's make it fixed.
+    await vscode.commands.executeCommand('gitTerminal._quickPick')
+  })
+  const runLastCmd = vscode.commands.registerCommand('gitTerminal.runLastCommand', async () => {
+    if (!cachedLastCommand) {
+      vscode.window.showInformationMessage('No last custom command yet. Pick one first.')
+      return
+    }
+    await runCustomEntry(cachedLastCommand)
+    const res = await buildCustomTerminalButtons()
+    if (res && res.updatePinned) res.updatePinned()
+  })
+  context.subscriptions.push(openCmd, runLastCmd)
 
   const finishSnippet = vscode.commands.registerCommand('gitTerminal.finishSnippet', async () => {
     if (!pendingSnippet) {
