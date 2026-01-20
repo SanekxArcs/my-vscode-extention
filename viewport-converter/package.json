@@ -54,6 +54,10 @@
       {
         "command": "viewportConverter.viewportSettingsQuick",
         "title": "Viewport Converter: Viewport Settings"
+      },
+      {
+        "command": "viewportConverter.toggleBrackets",
+        "title": "Viewport Converter: Toggle Brackets"
       }
     ],
     "keybindings": [
@@ -190,6 +194,26 @@
             "type": "boolean",
             "default": true,
             "description": "Show the viewport screen, base font size, and precision status bar button."
+          },
+          "viewportConverter.useBrackets": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to use brackets [] for Tailwind conversion (e.g., [10px] vs 10px)."
+          },
+          "viewportConverter.showConvertHereButton": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the 'Convert Here' button in the status bar."
+          },
+          "viewportConverter.showViewportInfo": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the viewport screen/base info in the status bar."
+          },
+          "viewportConverter.showBracketToggle": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the brackets toggle button in the status bar."
           }
         }
       }

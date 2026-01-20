@@ -64,9 +64,15 @@ function parseSelectedValue(text) {
 function parseViewportValue(text) {
   const match = text
     .trim()
-    .match(/^(-?\d*\.?\d+)\s*(vw|vh|vmin|vmax|dvw|dvh|lvw|lvh|svw|svh)$/i);
+    .match(
+      /^(-)?(?:\[)?(-?\d*\.?\d+)\s*(vw|vh|vmin|vmax|dvw|dvh|lvw|lvh|svw|svh)(?:\])?$/i,
+    );
   if (!match) return null;
-  return { value: parseFloat(match[1]), unit: match[2].toLowerCase() };
+  return {
+    prefix: match[1] || "",
+    value: parseFloat(match[2]),
+    unit: match[3].toLowerCase(),
+  };
 }
 
 function parsePxRemOrTw(text) {
@@ -76,6 +82,20 @@ function parsePxRemOrTw(text) {
     prefix: match[1] || "",
     value: parseFloat(match[3]),
     unit: match[4] ? match[4].toLowerCase() : "tw",
+  };
+}
+
+function parseGeneral(text) {
+  const match = text
+    .trim()
+    .match(
+      /^(-)?(?:\[)?(-?\d*\.?\d+)\s*(px|rem|vw|vh|vmin|vmax|dvw|dvh|lvw|lvh|svw|svh)?(?:\])?$/i,
+    );
+  if (!match) return null;
+  return {
+    prefix: match[1] || "",
+    value: parseFloat(match[2]),
+    unit: match[3] ? match[3].toLowerCase() : "tw",
   };
 }
 
@@ -225,6 +245,7 @@ function registerConverter(context, options = {}) {
         for (const sel of selections) {
           let text = editor.document.getText(sel);
           let currentAxis = vwOrVh;
+          const useBrackets = cfg.get("useBrackets", true);
 
           if (autoAxis) {
             currentAxis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
@@ -233,9 +254,9 @@ function registerConverter(context, options = {}) {
           const denom = currentAxis === "vw" ? parsed.width : parsed.height;
 
           if (!text) {
-            const hit = detectValueAtPosition(editor.document, sel.start);
+            const hit = detectValueAtPositionLoose(editor.document, sel.start);
             if (!hit) continue;
-            const parsedValue = parseSelectedValue(hit.text);
+            const parsedValue = parsePxRemOrTw(hit.text);
             if (!parsedValue || !["px", "rem"].includes(parsedValue.unit))
               continue;
             const range = new vscode.Range(
@@ -250,11 +271,14 @@ function registerConverter(context, options = {}) {
                 : parsedValue.value;
             const result = toViewport(px, denom, precision);
             if (result == null) continue;
-            editBuilder.replace(range, `${result}${currentAxis}`);
+            const output = useBrackets
+              ? `[${result}${currentAxis}]`
+              : `${result}${currentAxis}`;
+            editBuilder.replace(range, output);
             continue;
           }
 
-          const parsedValue = parseSelectedValue(text);
+          const parsedValue = parsePxRemOrTw(text);
           if (!parsedValue || !["px", "rem"].includes(parsedValue.unit))
             continue;
           const px =
@@ -263,7 +287,10 @@ function registerConverter(context, options = {}) {
               : parsedValue.value;
           const result = toViewport(px, denom, precision);
           if (result == null) continue;
-          editBuilder.replace(sel, `${result}${currentAxis}`);
+          const output = useBrackets
+            ? `[${result}${currentAxis}]`
+            : `${result}${currentAxis}`;
+          editBuilder.replace(sel, output);
         }
       });
 
@@ -334,13 +361,14 @@ function registerConverter(context, options = {}) {
         ? editor.selections
         : [editor.selection];
       const unitRegex =
-        /(-?\d*\.?\d+)\s*(vw|vh|vmin|vmax|dvw|dvh|lvw|lvh|svw|svh)\b/gi;
+        /(-)?(?:\[)?(-?\d*\.?\d+)\s*(vw|vh|vmin|vmax|dvw|dvh|lvw|lvh|svw|svh)\b(?:\])?/gi;
 
       await editor.edit((editBuilder) => {
         for (const sel of selections) {
           const text = editor.document.getText(sel);
+          const useBrackets = cfg.get("useBrackets", true);
 
-          const convertMatch = (value, unit) => {
+          const convertMatch = (prefix, value, unit) => {
             let denom;
             if (unit.endsWith("vw")) denom = parsed.width;
             else if (unit.endsWith("vh")) denom = parsed.height;
@@ -350,13 +378,16 @@ function registerConverter(context, options = {}) {
               denom = Math.max(parsed.width, parsed.height);
             else denom = parsed.width;
             const px = (value / 100) * denom;
-            return outputUnit === "rem"
-              ? `${toFixedTrim(px / baseFontSize, precision)}rem`
-              : `${toFixedTrim(px, precision)}px`;
+            const resVal =
+              outputUnit === "rem"
+                ? `${toFixedTrim(px / baseFontSize, precision)}rem`
+                : `${toFixedTrim(px, precision)}px`;
+
+            return useBrackets ? `${prefix}[${resVal}]` : `${prefix}${resVal}`;
           };
 
           if (!text) {
-            const hit = detectValueAtPosition(editor.document, sel.start);
+            const hit = detectValueAtPositionLoose(editor.document, sel.start);
             if (!hit) continue;
             const parsedValue = parseViewportValue(hit.text);
             if (!parsedValue) continue;
@@ -368,14 +399,19 @@ function registerConverter(context, options = {}) {
             );
             editBuilder.replace(
               range,
-              convertMatch(parsedValue.value, parsedValue.unit)
+              convertMatch(
+                parsedValue.prefix,
+                parsedValue.value,
+                parsedValue.unit,
+              ),
             );
           } else {
             const replacements = [];
             let unitMatch;
             while ((unitMatch = unitRegex.exec(text)) !== null) {
-              const value = parseFloat(unitMatch[1]);
-              const unit = unitMatch[2].toLowerCase();
+              const prefix = unitMatch[1] || "";
+              const value = parseFloat(unitMatch[2]);
+              const unit = unitMatch[3].toLowerCase();
               const startOffset = unitMatch.index;
               const endOffset = unitMatch.index + unitMatch[0].length;
               const startAbsolute =
@@ -384,7 +420,7 @@ function registerConverter(context, options = {}) {
                 editor.document.offsetAt(sel.start) + endOffset;
               const startPos = editor.document.positionAt(startAbsolute);
               const endPos = editor.document.positionAt(endAbsolute);
-              const out = convertMatch(value, unit);
+              const out = convertMatch(prefix, value, unit);
               replacements.push({
                 range: new vscode.Range(startPos, endPos),
                 out,
@@ -410,6 +446,7 @@ function registerConverter(context, options = {}) {
     async () => {
       const cfg = cfgGet();
       const baseFontSize = cfg.get("baseFontSize", 16);
+      const useBrackets = cfg.get("useBrackets", true);
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showWarningMessage(
@@ -435,13 +472,19 @@ function registerConverter(context, options = {}) {
             let out;
             if (parsed.unit === "px") {
               const rem = Math.abs(parsed.value) / baseFontSize;
-              out = `${parsed.prefix}[${formatByUnit(rem, "rem")}rem]`;
+              const formatted = formatByUnit(rem, "rem");
+              out = useBrackets
+                ? `${parsed.prefix}[${formatted}rem]`
+                : `${parsed.prefix}${formatted}rem`;
             } else if (parsed.unit === "rem") {
               const tw = Math.abs(parsed.value) * 4;
               out = `${parsed.prefix}${formatByUnit(tw, "tw")}`;
             } else {
               const px = (Math.abs(parsed.value) * baseFontSize) / 4;
-              out = `${parsed.prefix}[${formatByUnit(px, "px")}px]`;
+              const formatted = formatByUnit(px, "px");
+              out = useBrackets
+                ? `${parsed.prefix}[${formatted}px]`
+                : `${parsed.prefix}${formatted}px`;
             }
             const range = new vscode.Range(
               sel.start.line,
@@ -458,13 +501,19 @@ function registerConverter(context, options = {}) {
           let out;
           if (parsed.unit === "px") {
             const rem = Math.abs(parsed.value) / baseFontSize;
-            out = `${parsed.prefix}[${formatByUnit(rem, "rem")}rem]`;
+            const formatted = formatByUnit(rem, "rem");
+            out = useBrackets
+              ? `${parsed.prefix}[${formatted}rem]`
+              : `${parsed.prefix}${formatted}rem`;
           } else if (parsed.unit === "rem") {
             const tw = Math.abs(parsed.value) * 4;
             out = `${parsed.prefix}${formatByUnit(tw, "tw")}`;
           } else {
             const px = (Math.abs(parsed.value) * baseFontSize) / 4;
-            out = `${parsed.prefix}[${formatByUnit(px, "px")}px]`;
+            const formatted = formatByUnit(px, "px");
+            out = useBrackets
+              ? `${parsed.prefix}[${formatted}px]`
+              : `${parsed.prefix}${formatted}px`;
           }
           editBuilder.replace(sel, out);
         }
@@ -495,23 +544,23 @@ function registerConverter(context, options = {}) {
     const selections = editor.selections.length
       ? editor.selections
       : [editor.selection];
+    const useBrackets = cfg.get("useBrackets", true);
+    
     const tokenRegex =
       axis === "vw"
-        ? /(-?\d*\.?\d+)\s*(px|rem|vw)\b/gi
-        : /(-?\d*\.?\d+)\s*(px|rem|vh)\b/gi;
+        ? /(-)?(?:\[)?(-?\d*\.?\d+)\s*(px|rem|vw)\b(?:\])?/gi
+        : /(-)?(?:\[)?(-?\d*\.?\d+)\s*(px|rem|vh)\b(?:\])?/gi;
 
     await editor.edit((editBuilder) => {
       for (const sel of selections) {
         const text = editor.document.getText(sel);
         if (!text) {
-          const hit = detectValueAtPosition(editor.document, sel.start);
+          const hit = detectValueAtPositionLoose(editor.document, sel.start);
           if (!hit) continue;
-          const match = hit.text
-            .trim()
-            .match(/^(-?\d*\.?\d+)\s*(px|rem|vw|vh)$/i);
+          const match = parseGeneral(hit.text);
           if (!match) continue;
-          const value = parseFloat(match[1]);
-          const unit = match[2].toLowerCase();
+          const value = match.value;
+          const unit = match.unit;
           const range = new vscode.Range(
             sel.start.line,
             hit.start,
@@ -524,30 +573,43 @@ function registerConverter(context, options = {}) {
             (axis === "vh" && unit === "vh")
           ) {
             const px = (value / 100) * denom;
-            out = `${toFixedTrim(px, precision)}px`;
+            const res = `${toFixedTrim(px, precision)}px`;
+            out = useBrackets
+              ? `${match.prefix}[${res}]`
+              : `${match.prefix}${res}`;
           } else if (unit === "px" || unit === "rem") {
             const px = unit === "rem" ? value * baseFontSize : value;
             const transformed = toViewport(px, denom, precision);
-            if (transformed != null) out = `${transformed}${axis}`;
+            if (transformed != null) {
+              const res = `${transformed}${axis}`;
+              out = useBrackets
+                ? `${match.prefix}[${res}]`
+                : `${match.prefix}${res}`;
+            }
           }
           if (out) editBuilder.replace(range, out);
         } else {
           const replacements = [];
           let match;
           while ((match = tokenRegex.exec(text)) !== null) {
-            const value = parseFloat(match[1]);
-            const unit = match[2].toLowerCase();
+            const prefix = match[1] || "";
+            const value = parseFloat(match[2]);
+            const unit = match[3].toLowerCase();
             let out = null;
             if (
               (axis === "vw" && unit === "vw") ||
               (axis === "vh" && unit === "vh")
             ) {
               const px = (value / 100) * denom;
-              out = `${toFixedTrim(px, precision)}px`;
+              const res = `${toFixedTrim(px, precision)}px`;
+              out = useBrackets ? `${prefix}[${res}]` : `${prefix}${res}`;
             } else if (unit === "px" || unit === "rem") {
               const px = unit === "rem" ? value * baseFontSize : value;
               const transformed = toViewport(px, denom, precision);
-              if (transformed != null) out = `${transformed}${axis}`;
+              if (transformed != null) {
+                const res = `${transformed}${axis}`;
+                out = useBrackets ? `${prefix}[${res}]` : `${prefix}${res}`;
+              }
             }
             if (!out) continue;
             const startOffset = match.index;
@@ -647,18 +709,42 @@ function registerConverter(context, options = {}) {
     vscode.StatusBarAlignment.Left,
     94
   );
+  const bracketToggleItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    93,
+  );
 
   const updateStatus = () => {
-    const screenValue = cfgGet().get("lastUsedScreen", "1440x900");
-    const base = cfgGet().get("baseFontSize", 16);
-    const precision = cfgGet().get("viewportPrecision", 4);
+    const cfg = cfgGet();
+    const screenValue = cfg.get("lastUsedScreen", "1440x900");
+    const base = cfg.get("baseFontSize", 16);
+    const precision = cfg.get("viewportPrecision", 4);
+    const useBrackets = cfg.get("useBrackets", true);
+
     const screenText = (
       typeof screenValue === "string" ? screenValue : String(screenValue)
     ).replace("x", "×");
     statusItem.text = `$(device-mobile) ${screenText} | ${base}px | p${precision}`;
     statusItem.tooltip =
       "Click to change viewport screen, base font size, or precision";
+
+    bracketToggleItem.text = useBrackets ? "$(check) []" : "$(x) []";
+    bracketToggleItem.tooltip = `Brackets are currently ${
+      useBrackets ? "ENABLED" : "DISABLED"
+    }. Click to toggle.`;
+    bracketToggleItem.command = `${commandPrefix}.toggleBrackets`;
   };
+
+  const toggleBracketsCmd = vscode.commands.registerCommand(
+    `${commandPrefix}.toggleBrackets`,
+    async () => {
+      const cfg = cfgGet();
+      const current = cfg.get("useBrackets", true);
+      await cfgUpdate("useBrackets", !current);
+      updateStatus();
+    },
+  );
+  context.subscriptions.push(toggleBracketsCmd);
 
   const cycleScreenCmd = vscode.commands.registerCommand(
     `${commandPrefix}.cycleViewportScreen`,
@@ -736,14 +822,26 @@ function registerConverter(context, options = {}) {
 
   function updateStatusBarVisibility() {
     const cfg = cfgGet();
-    const showStatusBar = cfg.get("showViewportStatusBar", true);
-    if (showStatusBar) {
+    const showAll = cfg.get("showViewportStatusBar", true);
+
+    if (showAll && cfg.get("showViewportInfo", true)) {
       updateStatus();
       statusItem.show();
-      quickConvertItem.show();
     } else {
       statusItem.hide();
+    }
+
+    if (showAll && cfg.get("showConvertHereButton", true)) {
+      quickConvertItem.show();
+    } else {
       quickConvertItem.hide();
+    }
+
+    if (showAll && cfg.get("showBracketToggle", true)) {
+      updateStatus();
+      bracketToggleItem.show();
+    } else {
+      bracketToggleItem.hide();
     }
   }
 
@@ -753,11 +851,17 @@ function registerConverter(context, options = {}) {
     if (
       event.affectsConfiguration(`${configSection}.lastUsedScreen`) ||
       event.affectsConfiguration(`${configSection}.baseFontSize`) ||
-      event.affectsConfiguration(`${configSection}.viewportPrecision`)
+      event.affectsConfiguration(`${configSection}.viewportPrecision`) ||
+      event.affectsConfiguration(`${configSection}.useBrackets`)
     ) {
       updateStatus();
     }
-    if (event.affectsConfiguration(`${configSection}.showViewportStatusBar`)) {
+    if (
+      event.affectsConfiguration(`${configSection}.showViewportStatusBar`) ||
+      event.affectsConfiguration(`${configSection}.showConvertHereButton`) ||
+      event.affectsConfiguration(`${configSection}.showViewportInfo`) ||
+      event.affectsConfiguration(`${configSection}.showBracketToggle`)
+    ) {
       updateStatusBarVisibility();
     }
   });
@@ -795,6 +899,7 @@ function registerConverter(context, options = {}) {
       await editor.edit((editBuilder) => {
         for (const sel of selections) {
           let axis = "vw";
+          const useBrackets = cfg.get("useBrackets", true);
           if (autoAxis) {
             axis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
           }
@@ -802,9 +907,9 @@ function registerConverter(context, options = {}) {
           const denom = axis === "vw" ? parsed.width : parsed.height;
           const text = editor.document.getText(sel);
           if (!text) {
-            const hit = detectValueAtPosition(editor.document, sel.start);
+            const hit = detectValueAtPositionLoose(editor.document, sel.start);
             if (!hit) continue;
-            const parsedVal = parseSelectedValue(hit.text);
+            const parsedVal = parsePxRemOrTw(hit.text);
             if (!parsedVal || !["px", "rem"].includes(parsedVal.unit)) continue;
             const range = new vscode.Range(
               sel.start.line,
@@ -818,15 +923,25 @@ function registerConverter(context, options = {}) {
                 : parsedVal.value;
             const out = toViewport(px, denom, precision);
             if (out == null) continue;
-            editBuilder.replace(range, `${out}${axis}`);
+            const outputText = useBrackets
+              ? `[${out}${axis}]`
+              : `${out}${axis}`;
+            editBuilder.replace(range, outputText);
           } else {
             const replacements = [];
+            // Match both plain and bracketed values for replacement
+            const looseRegex = /(-)?(?:\[)?(-?\d*\.?\d+)\s*(px|rem)\b(?:\])?/gi;
             let match;
-            while ((match = pxRemRegex.exec(text)) !== null) {
-              const value = parseFloat(match[1]);
-              const unit = match[2].toLowerCase();
+            while ((match = looseRegex.exec(text)) !== null) {
+              const prefix = match[1] || "";
+              const value = parseFloat(match[2]);
+              const unit = match[3].toLowerCase();
               const px = unit === "rem" ? value * baseFontSize : value;
-              const out = `${toViewport(px, denom, precision)}${axis}`;
+              const out = toViewport(px, denom, precision);
+              const outputText = useBrackets
+                ? `${prefix}[${out}${axis}]`
+                : `${prefix}${out}${axis}`;
+
               const startOffset = match.index;
               const endOffset = match.index + match[0].length;
               const startAbsolute =
@@ -837,7 +952,7 @@ function registerConverter(context, options = {}) {
               const endPos = editor.document.positionAt(endAbsolute);
               replacements.push({
                 range: new vscode.Range(startPos, endPos),
-                out,
+                out: outputText,
               });
             }
             for (let i = replacements.length - 1; i >= 0; i--) {
@@ -850,7 +965,7 @@ function registerConverter(context, options = {}) {
   );
   context.subscriptions.push(quickConvertCmd);
 
-  context.subscriptions.push(statusItem, quickConvertItem);
+  context.subscriptions.push(statusItem, quickConvertItem, bracketToggleItem);
 }
 
 module.exports = { registerConverter }
