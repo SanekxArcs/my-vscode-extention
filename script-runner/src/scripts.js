@@ -84,7 +84,7 @@ function createTask(folder, pm, name, hasNvmrc = false) {
   });
 
   const task = new vscode.Task(
-    { type: "runmate", script: name, pm, folderPath: folder.uri.fsPath },
+    { type: "run-mate-script-runner", script: name, pm, folderPath: folder.uri.fsPath },
     folder,
     `run ${name}`,
     "RunMate",
@@ -109,7 +109,7 @@ async function terminateExistingIfNeeded(folder, name, pm) {
     try {
       const def = execution.task.definition
       if (
-        def?.type === "runmate" &&
+        def?.type === "run-mate-script-runner" &&
         def.script === name &&
         def.pm === pm &&
         def.folderPath === folder.uri.fsPath
@@ -225,7 +225,7 @@ function registerScriptCommands(context) {
     lastCollected = collected
 
     const makeCommandId = (entry) =>
-      `runmate.runScript.${slugify(
+      `run-mate-script-runner.runScript.${slugify(
         (entry.folder?.name || "pick") + ":" + entry.name
       )}`;
 
@@ -293,7 +293,7 @@ function registerScriptCommands(context) {
       overflowItem.text = `$(ellipsis) +${overflow.length}`
       overflowItem.tooltip = 'More scripts'
 
-      const overflowCommandId = "runmate.runScript._overflow";
+      const overflowCommandId = "run-mate-script-runner.runScript._overflow";
       const overflowCmd = vscode.commands.registerCommand(overflowCommandId, async () => {
         try {
           const pick = await vscode.window.showQuickPick(
@@ -332,10 +332,10 @@ function registerScriptCommands(context) {
   }
 
   const stopCommand = vscode.commands.registerCommand(
-    "runmate.stopRunningScripts",
+    "run-mate-script-runner.stopRunningScripts",
     async () => {
       const executions = [...vscode.tasks.taskExecutions].filter(
-        (execution) => execution.task.definition?.type === "runmate"
+        (execution) => execution.task.definition?.type === "run-mate-script-runner"
       );
       if (!executions.length) {
         vscode.window.showInformationMessage("RunMate: no running scripts");
@@ -359,7 +359,7 @@ function registerScriptCommands(context) {
   context.subscriptions.push(stopCommand)
 
   const showAllScriptsCommand = vscode.commands.registerCommand(
-    "runmate.showAllScripts",
+    "run-mate-script-runner.showAllScripts",
     async () => {
       try {
         const pick = await vscode.window.showQuickPick(
@@ -396,12 +396,13 @@ function registerScriptCommands(context) {
 
   const configListener = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration("runmate.useDynamicScriptParsing") ||
-      event.affectsConfiguration("runmate.excludeScripts") ||
-      event.affectsConfiguration("runmate.maxDynamicScriptButtons") ||
-      event.affectsConfiguration("runmate.reuseTerminalForScripts") ||
-      event.affectsConfiguration("runmate.workspaceMode") ||
-      event.affectsConfiguration("runmate.askBeforeKill")
+      event.affectsConfiguration("run-mate-script-runner.useDynamicScriptParsing") ||
+      event.affectsConfiguration("run-mate-script-runner.excludeScripts") ||
+      event.affectsConfiguration("run-mate-script-runner.maxDynamicScriptButtons") ||
+      event.affectsConfiguration("run-mate-script-runner.reuseTerminalForScripts") ||
+      event.affectsConfiguration("run-mate-script-runner.workspaceMode") ||
+      event.affectsConfiguration("run-mate-script-runner.scriptOrder") ||
+      event.affectsConfiguration("run-mate-script-runner.askBeforeKill")
     ) {
       applyVisibility();
     }

@@ -1,4 +1,4 @@
-# RunMate
+# RunMate - Script Runner
 
 > Quick script runner with intelligent status bar buttons for package.json scripts
 

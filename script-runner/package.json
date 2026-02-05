@@ -1,25 +1,24 @@
 {
-  "name": "runmate",
-  "displayName": "RunMate",
+  "name": "run-mate-script-runner",
+  "displayName": "RunMate - Script Runner",
   "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
   "version": "1.0.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
-  "icon": "icon.png",
+  "icon": "icon-128.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SanekxArcs/runmate"
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/script-runner"
   },
-  "homepage": "https://github.com/SanekxArcs/runmate/blob/main/README.md",
+  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/script-runner/README.md",
   "bugs": {
-    "url": "https://github.com/SanekxArcs/runmate/issues"
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/issues"
   },
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Other",
-    "Productivity"
+    "Other"
   ],
   "keywords": [
     "npm",
@@ -41,30 +40,30 @@
   "contributes": {
     "commands": [
       {
-        "command": "runmate.stopRunningScripts",
-        "title": "RunMate: Stop Running Scripts"
+        "command": "run-mate-script-runner.stopRunningScripts",
+        "title": "run-mate-script-runner: Stop Running Scripts"
       },
       {
-        "command": "runmate.showAllScripts",
-        "title": "RunMate: Show All Scripts"
+        "command": "run-mate-script-runner.showAllScripts",
+        "title": "run-mate-script-runner: Show All Scripts"
       }
     ],
     "keybindings": [
       {
-        "command": "runmate.showAllScripts",
+        "command": "run-mate-script-runner.showAllScripts",
         "key": "ctrl+alt+q"
       }
     ],
     "configuration": [
       {
-        "title": "RunMate",
+        "title": "run-mate-script-runner",
         "properties": {
-          "runmate.useDynamicScriptParsing": {
+          "run-mate-script-runner.useDynamicScriptParsing": {
             "type": "boolean",
             "default": true,
             "description": "Enable dynamic status bar buttons generated from package.json scripts."
           },
-          "runmate.workspaceMode": {
+          "run-mate-script-runner.workspaceMode": {
             "type": "string",
             "enum": [
               "first",
@@ -74,7 +73,7 @@
             "default": "first",
             "description": "How to handle multi-root workspaces when building buttons: first folder, pick per run, or all folders."
           },
-          "runmate.excludeScripts": {
+          "run-mate-script-runner.excludeScripts": {
             "type": "array",
             "items": {
               "type": "string"
@@ -86,13 +85,13 @@
             ],
             "description": "List of scripts to ignore when generating status bar buttons."
           },
-          "runmate.maxDynamicScriptButtons": {
+          "run-mate-script-runner.maxDynamicScriptButtons": {
             "type": "number",
             "default": 8,
             "minimum": 0,
             "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
           },
-          "runmate.scriptOrder": {
+          "run-mate-script-runner.scriptOrder": {
             "type": "array",
             "items": {
               "type": "string"
@@ -106,12 +105,12 @@
             ],
             "description": "Priority order for scripts. Scripts listed here will appear first."
           },
-          "runmate.reuseTerminalForScripts": {
+          "run-mate-script-runner.reuseTerminalForScripts": {
             "type": "boolean",
             "default": true,
             "description": "Reuse dedicated terminals per script instead of creating a new terminal each time."
           },
-          "runmate.askBeforeKill": {
+          "run-mate-script-runner.askBeforeKill": {
             "type": "boolean",
             "default": true,
             "description": "Ask for confirmation before stopping a running script when re-running from the status bar."
