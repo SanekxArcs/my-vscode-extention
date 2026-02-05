@@ -60,6 +60,20 @@
         "title": "Viewport Converter: Toggle Brackets"
       }
     ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "viewportConverter.convertToViewportUnit",
+          "when": "editorTextFocus",
+          "group": "navigation@9"
+        },
+        {
+          "command": "viewportConverter.reverseConvertFromViewportUnit",
+          "when": "editorTextFocus",
+          "group": "navigation@10"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "viewportConverter.convertToViewportUnit",
