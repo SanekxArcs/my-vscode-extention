@@ -3,7 +3,12 @@
   "displayName": "Viewport Converter",
   "description": "Convert CSS length units between px/rem and vw/vh with smart status bar utilities.",
   "version": "0.0.1",
-  "publisher": "local",
+  "publisher": "ViewportConverter",
+  "icon": "vp-converter.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/viewport-converter"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
