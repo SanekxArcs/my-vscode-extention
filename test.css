@@ -2,7 +2,7 @@
     /* Test cases for Tailwind cycle (Alt+Z) */
     padding: 6;      /* Should cycle to [24px] or [1.5rem] */
     margin: 2;     /* Should cycle to [8px] or [0.5rem] (treating - as part of the match) */
-    width: [24px];  /* Should cycle to [1.5rem] or 6 */
+    width: [[3.125vw]];  /* Should cycle to [1.5rem] or 6 */
     height: [1.5rem]; /* Should cycle to 6 or [24px] */
     
     /* Current problematic cases */

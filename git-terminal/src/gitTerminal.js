@@ -1,8 +1,8 @@
 const vscode = require('vscode')
 const { getConfig } = require('./config')
 
-const GLOBAL_LAST_COMMAND_KEY = 'gitTerminal.lastCommand'
-const GLOBAL_HISTORY_KEY = 'gitTerminal.history'
+const GLOBAL_LAST_COMMAND_KEY = 'terminal-mate.lastCommand'
+const GLOBAL_HISTORY_KEY = 'terminal-mate.history'
 
 function shellEscapePosix(input) {
   if (input == null) return ''
@@ -23,7 +23,7 @@ function normalizeOs(os) {
   return map[normalized] || normalized
 }
 
-function registerGitTerminal(context) {
+function registerTerminalMate(context) {
   let statusItems = []
   let disposables = []
   let finishStatusItem = null
@@ -172,7 +172,7 @@ function registerGitTerminal(context) {
         finishStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95)
         finishStatusItem.text = '$(arrow-right) Finish snippet'
         finishStatusItem.tooltip = 'Finish current custom snippet'
-        finishStatusItem.command = 'gitTerminal.finishSnippet'
+        finishStatusItem.command = 'terminal-mate.finishSnippet'
         context.subscriptions.push(finishStatusItem)
       }
       finishStatusItem.show()
@@ -197,13 +197,13 @@ function registerGitTerminal(context) {
     const customEntries = cfg.get('customTerminals', []) || []
     if (!Array.isArray(customEntries) || customEntries.length === 0) return
 
-    const buttonLabel = (cfg.get('customTerminalsButtonLabel', 'git-c') || 'git-c').toString()
+    const buttonLabel = (cfg.get('customTerminalsButtonLabel', 'TM') || 'TM').toString()
     const basePriority = 96
     const statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, basePriority)
     statusItem.text = '$(terminal) ' + buttonLabel
     statusItem.tooltip = 'Open saved commands'
 
-    const quickPickCommandId = 'gitTerminal._quickPick'
+    const quickPickCommandId = 'terminal-mate._quickPick'
     const quickPickDisposable = vscode.commands.registerCommand(quickPickCommandId, async () => {
       try {
         const picks = customEntries
@@ -222,12 +222,11 @@ function registerGitTerminal(context) {
         await runCustomEntry(entry)
         await updatePinned()
       } catch (error) {
-        vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
+        vscode.window.showErrorMessage(`TerminalMate: ${error.message}`)
       }
     })
     disposables.push(quickPickDisposable)
-    // context.subscriptions.push(quickPickDisposable) // Will be handled in registerGitTerminal
-
+    // context.subscriptions.push(quickPickDisposable)
     // disposables.push(openCmd, runLastCmd)
     // context.subscriptions.push(openCmd, runLastCmd)
 
@@ -251,7 +250,7 @@ function registerGitTerminal(context) {
       pinnedItem.text = `${prefix} ${cachedLastCommand.title}`
       pinnedItem.tooltip = `Run last custom: ${cachedLastCommand.command}`
 
-      const pinCommandId = 'gitTerminal._runPinned'
+      const pinCommandId = 'terminal-mate._runPinned'
       try {
         const existing = await vscode.commands.getCommands(true)
         if (!existing.includes(pinCommandId)) {
@@ -260,7 +259,7 @@ function registerGitTerminal(context) {
               await runCustomEntry(cachedLastCommand)
               await updatePinned()
             } catch (error) {
-              vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
+              vscode.window.showErrorMessage(`TerminalMate: ${error.message}`)
             }
           })
           disposables.push(pinDisposable)
@@ -273,7 +272,7 @@ function registerGitTerminal(context) {
               await runCustomEntry(cachedLastCommand)
               await updatePinned()
             } catch (error) {
-              vscode.window.showErrorMessage(`Git Terminal: ${error.message}`)
+              vscode.window.showErrorMessage(`TerminalMate: ${error.message}`)
             }
           })
           disposables.push(pinDisposable)
@@ -292,13 +291,13 @@ function registerGitTerminal(context) {
     return { updatePinned, quickPickCommandId }
   }
 
-  const openCmd = vscode.commands.registerCommand('gitTerminal.openCommands', async () => {
+  const openCmd = vscode.commands.registerCommand('terminal-mate.openCommands', async () => {
     // We can't directy call buildCustomTerminalButtons internal quickPickCommandId easily 
     // unless we store it. Let's make it a fixed ID or similar.
     // Actually, buildCustomTerminalButtons defines it. Let's make it fixed.
-    await vscode.commands.executeCommand('gitTerminal._quickPick')
+    await vscode.commands.executeCommand('terminal-mate._quickPick')
   })
-  const runLastCmd = vscode.commands.registerCommand('gitTerminal.runLastCommand', async () => {
+  const runLastCmd = vscode.commands.registerCommand('terminal-mate.runLastCommand', async () => {
     if (!cachedLastCommand) {
       vscode.window.showInformationMessage('No last custom command yet. Pick one first.')
       return
@@ -309,7 +308,7 @@ function registerGitTerminal(context) {
   })
   context.subscriptions.push(openCmd, runLastCmd)
 
-  const finishSnippet = vscode.commands.registerCommand('gitTerminal.finishSnippet', async () => {
+  const finishSnippet = vscode.commands.registerCommand('terminal-mate.finishSnippet', async () => {
     if (!pendingSnippet) {
       vscode.window.showInformationMessage('No pending snippet.')
       return
@@ -325,7 +324,7 @@ function registerGitTerminal(context) {
   })
   context.subscriptions.push(finishSnippet)
 
-  const historyCommand = vscode.commands.registerCommand('gitTerminal.history', async () => {
+  const historyCommand = vscode.commands.registerCommand('terminal-mate.history', async () => {
     const history = context.globalState.get(GLOBAL_HISTORY_KEY, [])
     if (!history.length) {
       vscode.window.showInformationMessage('No history yet.')
@@ -348,16 +347,16 @@ function registerGitTerminal(context) {
 
   const onConfigChange = vscode.workspace.onDidChangeConfiguration((event) => {
     if (
-      event.affectsConfiguration('gitTerminal.customTerminals') ||
-      event.affectsConfiguration('gitTerminal.customTerminalsButtonLabel') ||
-      event.affectsConfiguration('gitTerminal.pinLastCustomTerminal') ||
-      event.affectsConfiguration('gitTerminal.pinLastCustomTerminalLabelPrefix') ||
-      event.affectsConfiguration('gitTerminal.cursorSymbol') ||
-      event.affectsConfiguration('gitTerminal.showPreviewForCustomTerminals') ||
-      event.affectsConfiguration('gitTerminal.reuseTerminalByTitle') ||
-      event.affectsConfiguration('gitTerminal.customHistorySize') ||
-      event.affectsConfiguration('gitTerminal.confirmDangerousCommands') ||
-      event.affectsConfiguration('gitTerminal.showStatusBar')
+      event.affectsConfiguration('terminal-mate.customTerminals') ||
+      event.affectsConfiguration('terminal-mate.customTerminalsButtonLabel') ||
+      event.affectsConfiguration('terminal-mate.pinLastCustomTerminal') ||
+      event.affectsConfiguration('terminal-mate.pinLastCustomTerminalLabelPrefix') ||
+      event.affectsConfiguration('terminal-mate.cursorSymbol') ||
+      event.affectsConfiguration('terminal-mate.showPreviewForCustomTerminals') ||
+      event.affectsConfiguration('terminal-mate.reuseTerminalByTitle') ||
+      event.affectsConfiguration('terminal-mate.customHistorySize') ||
+      event.affectsConfiguration('terminal-mate.confirmDangerousCommands') ||
+      event.affectsConfiguration('terminal-mate.showStatusBar')
     ) {
       buildCustomTerminalButtons()
     }
@@ -369,4 +368,4 @@ function registerGitTerminal(context) {
   return { buildCustomTerminalButtons }
 }
 
-module.exports = { registerGitTerminal }
+module.exports = { registerTerminalMate }

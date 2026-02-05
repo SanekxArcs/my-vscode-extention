@@ -1,0 +1,11 @@
+.git
+.gitignore
+.vscode
+node_modules
+*.vsix
+.DS_Store
+Thumbs.db
+*.md
+!README.md
+!CHANGELOG.md
+!LICENSE

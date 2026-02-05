@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'viewportConverter'
+const CONFIG_SECTION = 'vc-mate'
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)

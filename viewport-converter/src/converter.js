@@ -164,8 +164,8 @@ function guessAxis(lineText) {
 
 function registerConverter(context, options = {}) {
   const {
-    commandPrefix = "viewportConverter",
-    configSection = "viewportConverter",
+    commandPrefix = "vc-mate",
+    configSection = "vc-mate",
     getConfig: customGetConfig,
     updateConfig: customUpdateConfig,
   } = options;

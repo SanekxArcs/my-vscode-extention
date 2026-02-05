@@ -1,35 +1,59 @@
-# Viewport Converter
+# VC-Mate: The Professional Viewport Converter
 
-Convert CSS pixel/rem values into viewport units and back again directly from VS Code. Includes Tailwind utility cycling, status bar controls for common screen sizes, and QuickPick workflows for fast conversions.
+**VC-Mate** is a high-productivity VS Code extension designed for modern web developers. It eliminates the friction of manually calculating viewport units (\w\/\h\) by providing instant, context-aware conversions directly within your editor.
 
-## Features
-- Convert selections or cursor values between px/rem and vw/vh
-- Reverse conversion from viewport units back to px/rem with configurable precision
-- Tailwind utility cycle (px → rem → tailwind unit → px)
-- Status bar overview of current screen/base font/precision with quick configuration pickers
-- Optional QuickConvert status button (toggled via settings)
-- Code actions for in-place refactors across CSS and JavaScript files
+---
 
-## Commands
-- `viewportConverter.convertToViewportUnit`
-- `viewportConverter.reverseConvertFromViewportUnit`
-- `viewportConverter.convertHereQuick`
-- `viewportConverter.convertCycleVW`
-- `viewportConverter.convertCycleVH`
-- `viewportConverter.cycleViewportScreen`
-- `viewportConverter.viewportSettingsQuick`
-- `viewportConverter.cycleTailwindUnit`
+## 🚀 Speed Up Your Workflow
 
-## Settings (`viewportConverter`)
-- `viewportScreens`: list of WIDTHxHEIGHT entries to convert against
-- `baseFontSize`: base font size for rem ↔ px conversions
-- `viewportPrecision`: decimal precision for viewport conversions
-- `defaultOutputUnit`: default when reversing viewport units (`px` or `rem`)
-- `autoDetectViewportAxis`: infer vw/vh from property name when possible
-- `lastUsedViewportUnit` / `lastUsedScreen`: persisted via commands
-- `showViewportStatusBar`: toggle visibility of the status bar controls
+Whether you're working with pixel-perfect designs or responsive layouts, **VC-Mate** handles the math so you can focus on the code.
 
-## Development
-1. Run `npm install` in this folder if you need additional dependencies (none by default).
-2. Launch the Extension Development Host with `F5` from VS Code.
-3. Trigger any converter command (Command Palette or keybindings) inside a file containing CSS values.
+### ✨ Key Features
+- **Instant Conversion**: Convert \px\ or \em\ to \w\/\h\ using \Ctrl+Alt+V\.
+- **Smart Reverse Engine**: Convert viewport units back to \px\ or \em\ with customizable precision.
+- **Tailwind-Ready**: Seamlessly toggle between plain units and Tailwind's arbitrary value syntax (e.g., \32px\ → \[2vw]\).
+- **One-Key Cycling**: 
+  - \Alt+Z\: Cycle units (\px\ → \em\ → \	ailwind\ → \px\).
+  - \Alt+V\ / \Alt+H\: Instant dimension scaling for width/height.
+- **Auto-Axis Detection**: Smartly infers whether to use \w\ or \h\ based on the CSS property name (e.g., \width\ vs \height\).
+- **Interactive Status Bar**: 
+  - **Quick Screen Switch**: Click to cycle through design resolutions (1440px, 375px, etc.).
+  - **Live Configuration**: Change base font size and decimal precision on the fly.
+
+---
+
+## 📋 Commands & Shortcuts
+
+| Action | Shortcut (Win/Linux) | Shortcut (macOS) |
+| :--- | :--- | :--- |
+| **Convert to Viewport** | \Ctrl+Alt+V\ | \Cmd+Alt+V\ |
+| **Reverse to Px/Rem** | \Ctrl+Alt+Shift+V\ | \Cmd+Alt+Shift+V\ |
+| **Cycle (vw)** | \Alt+V\ | \Alt+V\ |
+| **Cycle (vh)** | \Alt+H\ | \Alt+H\ |
+| **Cycle Tailwind/Rem** | \Alt+Z\ | \Alt+Z\ |
+| **Cycle Target Screen** | \Alt+X\ | \Alt+X\ |
+
+---
+
+## ⚙️ Customization
+
+Fine-tune **VC-Mate** to match your project's architecture:
+
+- \c-mate.viewportScreens\: Define your list of design target resolutions.
+- \c-mate.baseFontSize\: Set your root rem size (default: \16\).
+- \c-mate.viewportPrecision\: Control the floating-point depth (default: \4\).
+- \c-mate.useBrackets\: Toggle Tailwind-style \[value]\ syntax.
+
+---
+
+## 🎯 Supported Languages
+Full support for **CSS**, **SCSS**, **Sass**, **Less**, **JavaScript/TypeScript** (CSS-in-JS), and **React** (JSX/TSX).
+
+## 🏃 Quick Start
+1. Place your cursor on a value like \16px\.
+2. Press \Ctrl+Alt+V\.
+3. Select your axis (\w\ or \h\) or let Auto-Detection handle it.
+4. Done! Your value is now responsive.
+
+---
+Developed with ❤️ by **SanekxArcs**

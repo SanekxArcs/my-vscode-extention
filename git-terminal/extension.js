@@ -1,7 +1,7 @@
-const { registerGitTerminal } = require('./src/gitTerminal')
+const { registerTerminalMate } = require('./src/gitTerminal')
 
 function activate(context) {
-  registerGitTerminal(context)
+  registerTerminalMate(context)
 }
 
 function deactivate() {}

@@ -1,47 +1,66 @@
 {
-  "name": "git-terminal",
-  "displayName": "Git Terminal",
-  "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows.",
-  "version": "0.0.1",
-  "publisher": "local",
+  "name": "terminal-mate",
+  "displayName": "TerminalMate",
+  "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows. Automate repetitive shell commands with intelligent placeholders.",
+  "version": "1.0.0",
+  "publisher": "SanekxArcs",
+  "license": "MIT",
+  "icon": "icon-128.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/git-terminal"
+  },
+  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/git-terminal/README.md",
+  "bugs": {
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/issues"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "terminal",
+    "git",
+    "snippets",
+    "automation",
+    "shell",
+    "bash",
+    "productivity"
+  ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:gitTerminal.openCommands",
-    "onCommand:gitTerminal.runLastCommand",
-    "onCommand:gitTerminal.finishSnippet",
-    "onCommand:gitTerminal.history"
+    "onCommand:terminal-mate.openCommands",
+    "onCommand:terminal-mate.runLastCommand",
+    "onCommand:terminal-mate.finishSnippet",
+    "onCommand:terminal-mate.history"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "gitTerminal.openCommands",
-        "title": "Git Terminal: Open Saved Commands"
+        "command": "terminal-mate.openCommands",
+        "title": "TerminalMate: Open Saved Commands"
       },
       {
-        "command": "gitTerminal.runLastCommand",
-        "title": "Git Terminal: Run Last Command"
+        "command": "terminal-mate.runLastCommand",
+        "title": "TerminalMate: Run Last Command"
       },
       {
-        "command": "gitTerminal.finishSnippet",
-        "title": "Git Terminal: Finish Snippet"
+        "command": "terminal-mate.finishSnippet",
+        "title": "TerminalMate: Finish Snippet"
       },
       {
-        "command": "gitTerminal.history",
-        "title": "Git Terminal: History"
+        "command": "terminal-mate.history",
+        "title": "TerminalMate: History"
       }
     ],
     "configuration": [
       {
-        "title": "Git Terminal",
+        "title": "TerminalMate",
         "properties": {
-          "gitTerminal.customTerminals": {
+          "terminal-mate.customTerminals": {
             "type": "array",
             "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{\n  \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\"\n}\n```",
             "default": [],
@@ -78,51 +97,50 @@
               }
             }
           },
-          "gitTerminal.customTerminalsButtonLabel": {
+          "terminal-mate.customTerminalsButtonLabel": {
             "type": "string",
-            "default": "git-c",
+            "default": "TM",
             "description": "Status Bar button label that opens the saved custom commands Quick Pick"
           },
-          "gitTerminal.cursorSymbol": {
+          "terminal-mate.cursorSymbol": {
             "type": "string",
             "default": "<|>",
             "description": "Marker inside snippets for manual cursor placement before finishing the command"
           },
-          "gitTerminal.showPreviewForCustomTerminals": {
+          "terminal-mate.showPreviewForCustomTerminals": {
             "type": "boolean",
             "default": false,
             "description": "Show a modal preview of the final command before running"
           },
-          "gitTerminal.reuseTerminalByTitle": {
+          "terminal-mate.reuseTerminalByTitle": {
             "type": "boolean",
             "default": true,
             "description": "Reuse existing terminal windows matched by snippet title"
           },
-          "gitTerminal.customHistorySize": {
+          "terminal-mate.customHistorySize": {
             "type": "number",
             "default": 10,
-            "minimum": 0,
-            "description": "Number of recent custom commands to remember"
+            "description": "Maximum number of executed commands to keep in history"
           },
-          "gitTerminal.confirmDangerousCommands": {
+          "terminal-mate.confirmDangerousCommands": {
             "type": "boolean",
             "default": true,
-            "description": "Ask for confirmation when a command appears dangerous (e.g., git reset --hard)"
+            "description": "Ask for confirmation before running git reset, clean, or force push"
           },
-          "gitTerminal.pinLastCustomTerminal": {
+          "terminal-mate.pinLastCustomTerminal": {
             "type": "boolean",
-            "default": false,
-            "description": "Show a separate Status Bar button for the last executed custom command"
+            "default": true,
+            "description": "Pin the most recently used command to the status bar for one-click access"
           },
-          "gitTerminal.pinLastCustomTerminalLabelPrefix": {
+          "terminal-mate.pinLastCustomTerminalLabelPrefix": {
             "type": "string",
-            "default": "★",
-            "description": "Prefix icon/label for the pinned last custom command button"
+            "default": "Last: ",
+            "description": "Prefix used for the pinned last-command status bar button"
           },
-          "gitTerminal.showStatusBar": {
+          "terminal-mate.showStatusBar": {
             "type": "boolean",
             "default": true,
-            "description": "Show the saved command status bar button"
+            "description": "Show the TerminalMate menu button in the status bar"
           }
         }
       }

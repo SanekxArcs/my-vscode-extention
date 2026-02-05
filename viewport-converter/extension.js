@@ -1,7 +1,7 @@
 const { registerConverter } = require('./src/converter')
 
 function activate(context) {
-  console.log('Viewport Converter activated')
+  console.log('VC-Mate activated')
   registerConverter(context)
 }
 

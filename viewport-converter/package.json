@@ -1,10 +1,10 @@
 {
-  "name": "viewport-converter",
-  "displayName": "Viewport Converter",
+  "name": "vc-mate",
+  "displayName": "VC-Mate",
   "description": "Convert CSS length units between px/rem and vw/vh with smart status bar utilities.",
-  "version": "0.0.1",
-  "publisher": "ViewportConverter",
-  "icon": "vp-converter.png",
+  "version": "1.0.0",
+  "publisher": "SanekxArcs",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/viewport-converter"
@@ -17,63 +17,63 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:viewportConverter.convertToViewportUnit",
-    "onCommand:viewportConverter.reverseConvertFromViewportUnit",
-    "onCommand:viewportConverter.convertHereQuick",
-    "onCommand:viewportConverter.convertCycleVW",
-    "onCommand:viewportConverter.convertCycleVH",
-    "onCommand:viewportConverter.cycleViewportScreen",
-    "onCommand:viewportConverter.viewportSettingsQuick"
+    "onCommand:vc-mate.convertToViewportUnit",
+    "onCommand:vc-mate.reverseConvertFromViewportUnit",
+    "onCommand:vc-mate.convertHereQuick",
+    "onCommand:vc-mate.convertCycleVW",
+    "onCommand:vc-mate.convertCycleVH",
+    "onCommand:vc-mate.cycleViewportScreen",
+    "onCommand:vc-mate.viewportSettingsQuick"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "viewportConverter.convertToViewportUnit",
-        "title": "Viewport Converter: Convert CSS unit to vw/vh"
+        "command": "vc-mate.convertToViewportUnit",
+        "title": "VC-Mate: Convert CSS unit to vw/vh"
       },
       {
-        "command": "viewportConverter.reverseConvertFromViewportUnit",
-        "title": "Viewport Converter: Convert vw/vh to px/rem"
+        "command": "vc-mate.reverseConvertFromViewportUnit",
+        "title": "VC-Mate: Convert vw/vh to px/rem"
       },
       {
-        "command": "viewportConverter.convertHereQuick",
-        "title": "Viewport Converter: Convert Selection"
+        "command": "vc-mate.convertHereQuick",
+        "title": "VC-Mate: Convert Selection"
       },
       {
-        "command": "viewportConverter.convertCycleVW",
-        "title": "Viewport Converter: Convert Cycle (vw)"
+        "command": "vc-mate.convertCycleVW",
+        "title": "VC-Mate: Convert Cycle (vw)"
       },
       {
-        "command": "viewportConverter.convertCycleVH",
-        "title": "Viewport Converter: Convert Cycle (vh)"
+        "command": "vc-mate.convertCycleVH",
+        "title": "VC-Mate: Convert Cycle (vh)"
       },
       {
-        "command": "viewportConverter.cycleTailwindUnit",
-        "title": "Viewport Converter: Cycle Tailwind (px -> rem -> tw)"
+        "command": "vc-mate.cycleTailwindUnit",
+        "title": "VC-Mate: Cycle Tailwind (px -> rem -> tw)"
       },
       {
-        "command": "viewportConverter.cycleViewportScreen",
-        "title": "Viewport Converter: Cycle Viewport Screen"
+        "command": "vc-mate.cycleViewportScreen",
+        "title": "VC-Mate: Cycle Viewport Screen"
       },
       {
-        "command": "viewportConverter.viewportSettingsQuick",
-        "title": "Viewport Converter: Viewport Settings"
+        "command": "vc-mate.viewportSettingsQuick",
+        "title": "VC-Mate: Viewport Settings"
       },
       {
-        "command": "viewportConverter.toggleBrackets",
-        "title": "Viewport Converter: Toggle Brackets"
+        "command": "vc-mate.toggleBrackets",
+        "title": "VC-Mate: Toggle Brackets"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "viewportConverter.convertToViewportUnit",
+          "command": "vc-mate.convertToViewportUnit",
           "when": "editorTextFocus",
           "group": "navigation@9"
         },
         {
-          "command": "viewportConverter.reverseConvertFromViewportUnit",
+          "command": "vc-mate.reverseConvertFromViewportUnit",
           "when": "editorTextFocus",
           "group": "navigation@10"
         }
@@ -81,34 +81,34 @@
     },
     "keybindings": [
       {
-        "command": "viewportConverter.convertToViewportUnit",
+        "command": "vc-mate.convertToViewportUnit",
         "key": "ctrl+alt+v",
         "mac": "cmd+alt+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "viewportConverter.reverseConvertFromViewportUnit",
+        "command": "vc-mate.reverseConvertFromViewportUnit",
         "key": "ctrl+alt+shift+v",
         "mac": "cmd+alt+shift+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "viewportConverter.convertCycleVW",
+        "command": "vc-mate.convertCycleVW",
         "key": "alt+v",
         "when": "editorTextFocus"
       },
       {
-        "command": "viewportConverter.convertCycleVH",
+        "command": "vc-mate.convertCycleVH",
         "key": "alt+h",
         "when": "editorTextFocus"
       },
       {
-        "command": "viewportConverter.cycleTailwindUnit",
+        "command": "vc-mate.cycleTailwindUnit",
         "key": "alt+z",
         "when": "editorTextFocus"
       },
       {
-        "command": "viewportConverter.cycleViewportScreen",
+        "command": "vc-mate.cycleViewportScreen",
         "key": "alt+x",
         "when": "editorTextFocus || editorFocus"
       }
@@ -129,21 +129,21 @@
           {
             "kind": "refactor.rewrite.viewport",
             "title": "Convert to vw/vh",
-            "command": "viewportConverter.convertToViewportUnit"
+            "command": "vc-mate.convertToViewportUnit"
           },
           {
             "kind": "refactor.rewrite.viewport.reverse",
             "title": "Convert vw/vh to px/rem",
-            "command": "viewportConverter.reverseConvertFromViewportUnit"
+            "command": "vc-mate.reverseConvertFromViewportUnit"
           }
         ]
       }
     ],
     "configuration": [
       {
-        "title": "Viewport Converter",
+        "title": "VC-Mate",
         "properties": {
-          "viewportConverter.viewportScreens": {
+          "vc-mate.viewportScreens": {
             "type": "array",
             "items": {
               "type": "string"
@@ -168,20 +168,20 @@
             ],
             "description": "List of target screens in WIDTHxHEIGHT format used for vw/vh conversion."
           },
-          "viewportConverter.baseFontSize": {
+          "vc-mate.baseFontSize": {
             "type": "number",
             "default": 16,
             "minimum": 1,
             "description": "Base font size in pixels used to convert rem to px (1rem = baseFontSize px)."
           },
-          "viewportConverter.viewportPrecision": {
+          "vc-mate.viewportPrecision": {
             "type": "number",
             "default": 4,
             "minimum": 0,
             "maximum": 8,
             "description": "Number of decimal places to keep when converting to vw/vh."
           },
-          "viewportConverter.defaultOutputUnit": {
+          "vc-mate.defaultOutputUnit": {
             "type": "string",
             "enum": [
               "px",
@@ -190,12 +190,12 @@
             "default": "px",
             "description": "Default unit for reverse conversion (vw/vh to px or rem)."
           },
-          "viewportConverter.autoDetectViewportAxis": {
+          "vc-mate.autoDetectViewportAxis": {
             "type": "boolean",
             "default": true,
             "description": "Auto-detect vw/vh from CSS property (e.g., width→vw, height→vh) and skip the unit prompt."
           },
-          "viewportConverter.lastUsedViewportUnit": {
+          "vc-mate.lastUsedViewportUnit": {
             "type": "string",
             "enum": [
               "vw",
@@ -204,32 +204,32 @@
             "default": "vw",
             "description": "Last used viewport unit (vw or vh) - automatically updated when you convert."
           },
-          "viewportConverter.lastUsedScreen": {
+          "vc-mate.lastUsedScreen": {
             "type": "string",
             "default": "1440x900",
             "description": "Last used screen resolution - automatically updated when you convert."
           },
-          "viewportConverter.showViewportStatusBar": {
+          "vc-mate.showViewportStatusBar": {
             "type": "boolean",
             "default": true,
             "description": "Show the viewport screen, base font size, and precision status bar button."
           },
-          "viewportConverter.useBrackets": {
+          "vc-mate.useBrackets": {
             "type": "boolean",
             "default": true,
             "description": "Whether to use brackets [] for Tailwind conversion (e.g., [10px] vs 10px)."
           },
-          "viewportConverter.showConvertHereButton": {
+          "vc-mate.showConvertHereButton": {
             "type": "boolean",
             "default": true,
             "description": "Show the 'Convert Here' button in the status bar."
           },
-          "viewportConverter.showViewportInfo": {
+          "vc-mate.showViewportInfo": {
             "type": "boolean",
             "default": true,
             "description": "Show the viewport screen/base info in the status bar."
           },
-          "viewportConverter.showBracketToggle": {
+          "vc-mate.showBracketToggle": {
             "type": "boolean",
             "default": true,
             "description": "Show the brackets toggle button in the status bar."

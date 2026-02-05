@@ -1,6 +1,6 @@
 const vscode = require('vscode')
 
-const CONFIG_SECTION = 'gitTerminal'
+const CONFIG_SECTION = 'terminal-mate'
 
 function getConfig() {
   return vscode.workspace.getConfiguration(CONFIG_SECTION)
