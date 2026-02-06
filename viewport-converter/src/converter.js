@@ -3,6 +3,12 @@ const { getConfig, updateConfig } = require('./config')
 
 const viewportUnits = ['vw', 'vh', 'vmin', 'vmax', 'dvw', 'dvh', 'lvw', 'lvh', 'svw', 'svh']
 
+const heightProps = new Set([
+  "height",
+  "min-height",
+  "max-height"
+]);
+
 function detectValueAtPosition(document, position) {
   const line = document.lineAt(position.line).text
   const regex = /(-?\d*\.\d+|-?\d+)(px|rem|vw|vh|dvw|dvh|lvw|lvh|svw|svh|vmin|vmax)/g
@@ -32,7 +38,7 @@ function detectValueAtPositionLoose(document, position) {
 }
 
 function toViewport(pxValue, dimension, precision) {
-  if (!dimension) return null;
+  if (!dimension || isNaN(pxValue)) return null;
   const val = (pxValue / dimension) * 100;
   let result = val.toFixed(Math.max(0, Math.min(8, precision)));
   result = result.replace(/\.0+$/, "").replace(/(\.\d*?[1-9])0+$/, "$1");
@@ -108,57 +114,21 @@ function formatByUnit(num, unit) {
 
 function guessAxis(lineText) {
   try {
-    const match = lineText.match(/^\s*([A-Za-z_-][A-Za-z0-9_-]*)\s*[:=]/);
-    if (!match) return null;
+    const match = lineText.match(/^\s*([A-Za-z_-][A-Za-z0-9_-]*)\s*[:=]/) || lineText.match(/^\s*(-?[a-z]+-[a-z0-9-]+)/);
+    if (!match) return "vw";
+
     const raw = match[1];
     const kebab = raw.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-    const widthProps = new Set([
-      "width",
-      "min-width",
-      "max-width",
-      "left",
-      "right",
-      "margin-left",
-      "margin-right",
-      "padding-left",
-      "padding-right",
-      "margin-inline-start",
-      "margin-inline-end",
-      "padding-inline-start",
-      "padding-inline-end",
-      "inline-size",
-      "min-inline-size",
-      "max-inline-size",
-      "gap",
-      "column-gap",
-      "letter-spacing",
-      "word-spacing",
-      "text-indent",
-      "translatex",
-      "transform",
-    ]);
-    const heightProps = new Set([
-      "height",
-      "min-height",
-      "max-height",
-      "top",
-      "bottom",
-      "margin-top",
-      "margin-bottom",
-      "padding-top",
-      "padding-bottom",
-      "line-height",
-      "row-gap",
-      "block-size",
-      "min-block-size",
-      "max-block-size",
-      "translatey",
-    ]);
-    if (widthProps.has(kebab)) return "vw";
+
     if (heightProps.has(kebab)) return "vh";
-    return null;
+
+    for (const prop of heightProps) {
+      if (kebab.startsWith(prop)) return "vh";
+    }
+
+    return "vw";
   } catch {
-    return null;
+    return "vw";
   }
 }
 
@@ -249,6 +219,7 @@ function registerConverter(context, options = {}) {
 
           if (autoAxis) {
             currentAxis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
+            if (!currentAxis || currentAxis === "null") currentAxis = "vw";
           }
 
           const denom = currentAxis === "vw" ? parsed.width : parsed.height;
@@ -902,6 +873,7 @@ function registerConverter(context, options = {}) {
           const useBrackets = cfg.get("useBrackets", true);
           if (autoAxis) {
             axis = guessAxis(editor.document.lineAt(sel.start.line).text) || cfg.get("lastUsedViewportUnit", "vw");
+            if (!axis || axis === "null") axis = "vw";
           }
 
           const denom = axis === "vw" ? parsed.width : parsed.height;
@@ -929,7 +901,6 @@ function registerConverter(context, options = {}) {
             editBuilder.replace(range, outputText);
           } else {
             const replacements = [];
-            // Match both plain and bracketed values for replacement
             const looseRegex = /(-)?(?:\[)?(-?\d*\.?\d+)\s*(px|rem)\b(?:\])?/gi;
             let match;
             while ((match = looseRegex.exec(text)) !== null) {

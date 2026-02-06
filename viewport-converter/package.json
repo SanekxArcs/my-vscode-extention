@@ -2,7 +2,7 @@
   "name": "vc-mate",
   "displayName": "VC-Mate",
   "description": "Convert CSS length units between px/rem and vw/vh with smart status bar utilities.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "SanekxArcs",
   "icon": "icon.png",
   "repository": {
@@ -15,6 +15,10 @@
   "categories": [
     "Other"
   ],
+  "scripts": {
+    "build": "vsce package",
+    "push": "vsce publish"
+  },
   "activationEvents": [
     "onStartupFinished",
     "onCommand:vc-mate.convertToViewportUnit",

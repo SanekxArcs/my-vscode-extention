@@ -2,7 +2,7 @@
   "name": "run-mate-script-runner",
   "displayName": "RunMate - Script Runner",
   "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "icon-128.png",
@@ -20,6 +20,10 @@
   "categories": [
     "Other"
   ],
+    "scripts": {
+    "build": "vsce package",
+    "push": "vsce publish"
+  },
   "keywords": [
     "npm",
     "pnpm",
@@ -31,7 +35,8 @@
     "quick-launch"
   ],
   "activationEvents": [
-    "workspaceContains:package.json"
+    "workspaceContains:package.json",
+    "onStartupFinished"
   ],
   "main": "./extension.js",
   "dependencies": {

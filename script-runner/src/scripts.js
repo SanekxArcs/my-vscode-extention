@@ -8,7 +8,10 @@ function getWorkspaceFolders() {
 }
 
 function slugify(id) {
-  return String(id).replace(/[^a-z0-9\-_.:]/gi, '_')
+  return String(id)
+    .replace(/[^a-z0-9\-]/gi, '_')
+    .replace(/_{2,}/g, '_')
+    .toLowerCase();
 }
 
 async function readPackageJson(uri) {
@@ -17,24 +20,30 @@ async function readPackageJson(uri) {
     const text = Buffer.from(bytes).toString('utf8')
     return parse(text)
   } catch (error) {
-        vscode.window.showErrorMessage(
-          `RunMate: invalid or unreadable package.json at ${uri.fsPath}`
-        );
+    // Fail silently if package.json is missing, only show error if it's invalid
+    try {
+      await vscode.workspace.fs.stat(uri);
+      vscode.window.showErrorMessage(
+        `RunMate: invalid or unreadable package.json at ${uri.fsPath}`
+      );
+    } catch {
+      // File doesn't exist, ignore
+    }
     return null
   }
 }
 
-async function checkNvmrcExists(root) {
+async function checkNvmrcExists(folderUri) {
   try {
-    const nvmrcPath = path.join(root, ".nvmrc");
-    await vscode.workspace.fs.stat(vscode.Uri.file(nvmrcPath));
+    const nvmrcUri = vscode.Uri.joinPath(folderUri, ".nvmrc");
+    await vscode.workspace.fs.stat(nvmrcUri);
     return true;
   } catch {
     return false;
   }
 }
 
-async function detectPackageManager(root, pkg) {
+async function detectPackageManager(folderUri, pkg) {
   const pmField = pkg?.packageManager
   if (typeof pmField === 'string') {
     if (pmField.startsWith('pnpm')) return 'pnpm'
@@ -42,19 +51,19 @@ async function detectPackageManager(root, pkg) {
     if (pmField.startsWith('bun')) return 'bun'
   }
 
-  const exists = async (target) => {
+  const exists = async (name) => {
     try {
-      await vscode.workspace.fs.stat(vscode.Uri.file(target))
+      await vscode.workspace.fs.stat(vscode.Uri.joinPath(folderUri, name))
       return true
     } catch {
       return false
     }
   }
 
-  if (await exists(path.join(root, 'pnpm-lock.yaml'))) return 'pnpm'
-  if (await exists(path.join(root, 'yarn.lock'))) return 'yarn'
-  if (await exists(path.join(root, 'bun.lockb'))) return 'bun'
-  if (await exists(path.join(root, 'bun.lock'))) return 'bun'
+  if (await exists('pnpm-lock.yaml')) return 'pnpm'
+  if (await exists('yarn.lock')) return 'yarn'
+  if (await exists('bun.lockb')) return 'bun'
+  if (await exists('bun.lock')) return 'bun'
   return 'npm'
 }
 
@@ -144,8 +153,12 @@ function registerScriptCommands(context) {
     for (const command of registeredCommands) {
       try { command.dispose() } catch {}
     }
+    for (const watcher of watchers) {
+      try { watcher.dispose() } catch {}
+    }
     statusItems = []
     registeredCommands = []
+    watchers = []
   }
 
   const buildButtons = async () => {
@@ -171,8 +184,8 @@ function registerScriptCommands(context) {
       const pkgUri = vscode.Uri.joinPath(folder.uri, 'package.json')
       const pkg = await readPackageJson(pkgUri)
       if (!pkg) return []
-      const pm = await detectPackageManager(folder.uri.fsPath, pkg)
-      const hasNvmrc = await checkNvmrcExists(folder.uri.fsPath);
+      const pm = await detectPackageManager(folder.uri, pkg)
+      const hasNvmrc = await checkNvmrcExists(folder.uri);
       const entries = Object.entries(pkg.scripts || {})
         .filter(([name]) => !exclude.has(name))
         .sort((a, b) => {
@@ -224,10 +237,13 @@ function registerScriptCommands(context) {
 
     lastCollected = collected
 
-    const makeCommandId = (entry) =>
-      `run-mate-script-runner.runScript.${slugify(
-        (entry.folder?.name || "pick") + ":" + entry.name
-      )}`;
+    const makeCommandId = (entry) => {
+      const folderKey = entry.folder ? entry.folder.name : "pick";
+      const nameKey = entry.name;
+      // Use a simpler mapping or hash if names are extremely long, 
+      // but slugify should handle basic unique command IDs.
+      return `run-mate-script-runner.runScript.${slugify(folderKey)}_${slugify(nameKey)}`;
+    };
 
     const runEntry = async (entry) => {
       try {
@@ -383,13 +399,20 @@ function registerScriptCommands(context) {
   );
   context.subscriptions.push(showAllScriptsCommand)
 
+  let watchers = []
   const watchPackageJson = () => {
+    for (const w of watchers) {
+      try { w.dispose() } catch {}
+    }
+    watchers = []
+
     for (const folder of getWorkspaceFolders()) {
       const pattern = new vscode.RelativePattern(folder, 'package.json')
       const watcher = vscode.workspace.createFileSystemWatcher(pattern)
       watcher.onDidChange(() => applyVisibility())
       watcher.onDidCreate(() => applyVisibility())
       watcher.onDidDelete(() => applyVisibility())
+      watchers.push(watcher)
       context.subscriptions.push(watcher)
     }
   }
@@ -409,8 +432,18 @@ function registerScriptCommands(context) {
   })
   context.subscriptions.push(configListener)
 
+  const workspaceListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    watchPackageJson()
+    applyVisibility()
+  })
+  context.subscriptions.push(workspaceListener)
+
+  // Initial setup
   watchPackageJson()
   applyVisibility()
+
+  // Ensure disposal on extension deactivate
+  context.subscriptions.push({ dispose: disposeAll })
 
   return { buildButtons, disposeAll }
 }
