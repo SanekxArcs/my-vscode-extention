@@ -2,15 +2,15 @@
   "name": "run-mate-script-runner",
   "displayName": "RunMate - Script Runner",
   "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "publisher": "SanekxArcs",
   "license": "MIT",
-  "icon": "icon-128.png",
+  "icon": "assets/icon-128.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/script-runner"
+    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/run-mate"
   },
-  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/script-runner/README.md",
+  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/run-mate/README.md",
   "bugs": {
     "url": "https://github.com/SanekxArcs/my-vscode-extention/issues"
   },
@@ -20,7 +20,10 @@
   "categories": [
     "Other"
   ],
-    "scripts": {
+  "extensionKind": [
+    "workspace"
+  ],
+  "scripts": {
     "build": "vsce package",
     "push": "vsce publish"
   },
@@ -35,6 +38,8 @@
     "quick-launch"
   ],
   "activationEvents": [
+    "onCommand:run-mate-script-runner.showAllScripts",
+    "onCommand:run-mate-script-runner.stopRunningScripts",
     "workspaceContains:package.json",
     "onStartupFinished"
   ],
@@ -46,11 +51,13 @@
     "commands": [
       {
         "command": "run-mate-script-runner.stopRunningScripts",
-        "title": "run-mate-script-runner: Stop Running Scripts"
+        "title": "Stop Running Scripts",
+        "category": "RunMate"
       },
       {
         "command": "run-mate-script-runner.showAllScripts",
-        "title": "run-mate-script-runner: Show All Scripts"
+        "title": "Show All Scripts",
+        "category": "RunMate"
       }
     ],
     "keybindings": [

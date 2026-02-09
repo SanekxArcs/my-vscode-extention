@@ -24,7 +24,7 @@ script-runner/
 │   ├── .gitignore                ✅ Git version control settings
 │   └── LICENSE                   ✅ MIT License
 │
-├── 🎨 ASSETS (TODO)
+├── 🎨 ASSETS
 │   └── icon.png                  ⏳ 128x128 PNG icon (ADD THIS!)
 │
 ├── �� SOURCE CODE (Updated)
