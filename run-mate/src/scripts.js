@@ -4,7 +4,8 @@ const {
   getWorkspaceFolders,
   readPackageJson,
   checkNvmrcExists,
-  detectPackageManager
+  detectPackageManager,
+  checkNodeModulesExists
 } = require('./packageUtils')
 const {
   createTask,
@@ -21,6 +22,7 @@ function registerScriptCommands(context) {
 
   const runEntry = async (entry) => {
     try {
+      const cfg = getConfig()
       let folder = entry.folder
       let pm = entry.pm
       let hasNvmrc = entry.hasNvmrc
@@ -41,10 +43,22 @@ function registerScriptCommands(context) {
       }
 
       if (!folder) return
+
+      const alwaysInstall = cfg.get('alwaysInstallDependencies', false)
+      const autoInstallMissing = cfg.get('autoInstallMissingDependencies', true)
+
+      let installFirst = alwaysInstall
+      if (!installFirst && autoInstallMissing) {
+        const modulesExist = await checkNodeModulesExists(folder.uri)
+        if (!modulesExist) {
+          installFirst = true
+        }
+      }
+
       const shouldRun = await terminateExistingIfNeeded(folder, entry.name, pm)
       if (!shouldRun) return
 
-      const task = createTask(folder, pm, entry.name, hasNvmrc)
+      const task = createTask(folder, pm, entry.name, hasNvmrc, installFirst)
       await vscode.tasks.executeTask(task)
     } catch (error) {
       vscode.window.showErrorMessage(`RunMate: failed to run ${entry.name}. ${error.message}`)

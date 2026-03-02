@@ -14,6 +14,7 @@ RunMate is a lightweight VS Code extension that brings your npm, pnpm, yarn, and
 - **Multi-Root Workspace Support** – Handle multiple workspace folders with ease
 - **Stop Command** – Quickly terminate running scripts from the command palette
 - **NVM Support** – Automatically uses `.nvmrc` when available for Node version management
+- **Auto-Install Dependencies** – Automatically run install commands (npm, pnpm, yarn, bun) if `node_modules` is missing or always before running scripts
 - **Smart Configuration** – Exclude specific scripts, control button limits, and customize behavior
 
 ## 🚀 Quick Start
@@ -73,6 +74,16 @@ All settings are under the `runmate` namespace. Customize RunMate to fit your wo
 - **Type:** `boolean`
 - **Default:** `true`
 - Ask for confirmation before stopping a running script when re-running from the status bar
+
+### `runmate.alwaysInstallDependencies`
+- **Type:** `boolean`
+- **Default:** `false`
+- Always run the installation command (e.g., `npm install`) before executing a script
+
+### `runmate.autoInstallMissingDependencies`
+- **Type:** `boolean`
+- **Default:** `true`
+- Automatically run the installation command if the `node_modules` folder is missing in the workspace folder
 
 ## 🎯 Use Cases
 

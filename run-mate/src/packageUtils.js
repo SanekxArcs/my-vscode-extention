@@ -63,10 +63,21 @@ async function detectPackageManager(folderUri, pkg) {
   return 'npm'
 }
 
+async function checkNodeModulesExists(folderUri) {
+  try {
+    const modulesUri = vscode.Uri.joinPath(folderUri, "node_modules");
+    await vscode.workspace.fs.stat(modulesUri);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   getWorkspaceFolders,
   slugify,
   readPackageJson,
   checkNvmrcExists,
-  detectPackageManager
+  detectPackageManager,
+  checkNodeModulesExists
 }

@@ -2,7 +2,7 @@
   "name": "run-mate-script-runner",
   "displayName": "RunMate - Script Runner",
   "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "assets/icon-128.png",
@@ -126,6 +126,16 @@
             "type": "boolean",
             "default": true,
             "description": "Ask for confirmation before stopping a running script when re-running from the status bar."
+          },
+          "run-mate-script-runner.alwaysInstallDependencies": {
+            "type": "boolean",
+            "default": false,
+            "description": "Always run install command (npm install, pnpm install, etc.) before running a script."
+          },
+          "run-mate-script-runner.autoInstallMissingDependencies": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically run install command if node_modules folder is missing."
           }
         }
       }

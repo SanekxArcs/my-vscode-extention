@@ -1,10 +1,26 @@
 const vscode = require('vscode')
 const { getConfig } = require('./config')
 
-function getRunCommand(pm, name, hasNvmrc = false) {
+function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
   let command = "";
   if (hasNvmrc) {
     command = ". ~/.nvm/nvm.sh && nvm use && ";
+  }
+
+  const getPMCmd = (pm) => {
+    switch (pm) {
+      case "pnpm": return "pnpm"
+      case "yarn": return "yarn"
+      case "bun": return "bun"
+      default: return "npm"
+    }
+  }
+
+  const pmCmd = getPMCmd(pm)
+
+  if (installFirst) {
+    const installCmd = pm === "yarn" ? "yarn install" : `${pmCmd} install`
+    command += `${installCmd} && `
   }
 
   switch (pm) {
@@ -19,15 +35,15 @@ function getRunCommand(pm, name, hasNvmrc = false) {
   }
 }
 
-function createTask(folder, pm, name, hasNvmrc = false) {
-  const shellCmd = getRunCommand(pm, name, hasNvmrc);
+function createTask(folder, pm, name, hasNvmrc = false, installFirst = false) {
+  const shellCmd = getRunCommand(pm, name, hasNvmrc, installFirst);
   const execution = new vscode.ShellExecution(shellCmd, {
     cwd: folder.uri.fsPath,
     env: process.env,
   });
 
   const task = new vscode.Task(
-    { type: "run-mate-script-runner", script: name, pm, folderPath: folder.uri.fsPath },
+    { type: "run-mate-script-runner", script: name, pm, folderPath: folder.uri.fsPath, installFirst },
     folder,
     `run ${name}`,
     "RunMate",
