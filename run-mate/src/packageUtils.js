@@ -39,6 +39,21 @@ async function checkNvmrcExists(folderUri) {
   }
 }
 
+/**
+ * nvm-windows (coreybutler) doesn't read .nvmrc automatically like POSIX nvm
+ * does, so callers on Windows need the version string to pass explicitly.
+ */
+async function readNvmrcVersion(folderUri) {
+  try {
+    const nvmrcUri = vscode.Uri.joinPath(folderUri, ".nvmrc");
+    const bytes = await vscode.workspace.fs.readFile(nvmrcUri);
+    const version = Buffer.from(bytes).toString('utf8').trim();
+    return version || null;
+  } catch {
+    return null;
+  }
+}
+
 async function detectPackageManager(folderUri, pkg) {
   const pmField = pkg?.packageManager
   if (typeof pmField === 'string') {
@@ -116,6 +131,7 @@ module.exports = {
   slugify,
   readPackageJson,
   checkNvmrcExists,
+  readNvmrcVersion,
   detectPackageManager,
   checkNodeModulesExists,
   checkDependenciesInstalled,

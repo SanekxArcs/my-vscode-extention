@@ -86,7 +86,7 @@ function registerScriptCommands(context) {
         }
       }
 
-      const task = createTask(folder, pm, entry.name, hasNvmrc, installFirst)
+      const task = await createTask(folder, pm, entry.name, hasNvmrc, installFirst)
       await vscode.tasks.executeTask(task)
       // Update immediately; onDidStartTask will also fire but that's harmless
       statusBarProvider.setRunning(entry, true)

@@ -1,15 +1,20 @@
 const vscode = require('vscode')
 const { getConfig } = require('./config')
+const { readNvmrcVersion } = require('./packageUtils')
 
-function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
+async function getRunCommand(pm, name, folderUri, hasNvmrc = false, installFirst = false) {
   let command = "";
   if (hasNvmrc) {
-    // Native Windows has no nvm.sh to source — nvm-windows (coreybutler) is a
-    // plain executable on PATH, so `nvm use` alone works there. POSIX shells
-    // (macOS/Linux/WSL) need nvm.sh sourced first to expose the nvm function.
-    command = process.platform === "win32"
-      ? "nvm use && "
-      : ". ~/.nvm/nvm.sh && nvm use && ";
+    if (process.platform === "win32") {
+      // nvm-windows (coreybutler) is a plain executable on PATH — no nvm.sh to
+      // source — but unlike POSIX nvm it doesn't read .nvmrc automatically,
+      // so the version must be passed explicitly (falls back to `nvm use`
+      // for aliases like "lts/*" that nvm-windows can't resolve anyway).
+      const version = await readNvmrcVersion(folderUri);
+      command = version ? `nvm use ${version} && ` : "nvm use && ";
+    } else {
+      command = ". ~/.nvm/nvm.sh && nvm use && ";
+    }
   }
 
   const getPMCmd = (pm) => {
@@ -43,8 +48,8 @@ function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
   }
 }
 
-function createTask(folder, pm, name, hasNvmrc = false, installFirst = false) {
-  const shellCmd = getRunCommand(pm, name, hasNvmrc, installFirst);
+async function createTask(folder, pm, name, hasNvmrc = false, installFirst = false) {
+  const shellCmd = await getRunCommand(pm, name, folder.uri, hasNvmrc, installFirst);
   const execution = new vscode.ShellExecution(shellCmd, {
     cwd: folder.uri.fsPath,
     env: process.env,
