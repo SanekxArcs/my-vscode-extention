@@ -2,7 +2,7 @@
   "name": "terminal-mate",
   "displayName": "TerminalMate",
   "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows. Automate repetitive shell commands with intelligent placeholders.",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "icon-128.png",

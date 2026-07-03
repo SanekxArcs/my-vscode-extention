@@ -4,13 +4,19 @@ const { getConfig } = require('./config')
 function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
   let command = "";
   if (hasNvmrc) {
-    command = ". ~/.nvm/nvm.sh && nvm use && ";
+    // Native Windows has no nvm.sh to source — nvm-windows (coreybutler) is a
+    // plain executable on PATH, so `nvm use` alone works there. POSIX shells
+    // (macOS/Linux/WSL) need nvm.sh sourced first to expose the nvm function.
+    command = process.platform === "win32"
+      ? "nvm use && "
+      : ". ~/.nvm/nvm.sh && nvm use && ";
   }
 
   const getPMCmd = (pm) => {
     switch (pm) {
       case "pnpm": return "pnpm"
       case "yarn": return "yarn"
+      case "yarn-berry": return "corepack yarn"
       case "bun": return "bun"
       default: return "npm"
     }
@@ -19,7 +25,7 @@ function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
   const pmCmd = getPMCmd(pm)
 
   if (installFirst) {
-    const installCmd = pm === "yarn" ? "yarn install" : `${pmCmd} install`
+    const installCmd = (pm === "yarn" || pm === "yarn-berry") ? `${pmCmd} install` : `${pmCmd} install`
     command += `${installCmd} && `
   }
 
@@ -28,6 +34,8 @@ function getRunCommand(pm, name, hasNvmrc = false, installFirst = false) {
       return command + `pnpm run ${name}`;
     case "yarn":
       return command + `yarn ${name}`;
+    case "yarn-berry":
+      return command + `corepack yarn run ${name}`;
     case "bun":
       return command + `bun run ${name}`;
     default:

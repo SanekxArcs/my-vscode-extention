@@ -5,20 +5,45 @@ const {
   readPackageJson,
   checkNvmrcExists,
   detectPackageManager,
-  checkNodeModulesExists
+  checkDependenciesInstalled
 } = require('./packageUtils')
 const {
-  createTask,
-  terminateExistingIfNeeded
+  createTask
 } = require('./taskManager')
 const { StatusBarProvider } = require('./statusBarProvider')
+const { makeFavoriteKey, getFavorites, toggleFavorite } = require('./favoritesManager')
 
 function registerScriptCommands(context) {
   let lastCollected = []
   let watchers = []
   let buildInProgress = false
 
-  const statusBarProvider = new StatusBarProvider(context, (entry) => runEntry(entry))
+  const statusBarProvider = new StatusBarProvider(
+    context,
+    (entry) => runEntry(entry),
+    (entry) => stopEntry(entry)
+  )
+
+  const stopEntry = async (entry) => {
+    for (const execution of vscode.tasks.taskExecutions) {
+      try {
+        const def = execution.task.definition
+        // For pick-mode entries entry.folder is null — match by name only
+        const folderMatch = entry.folder
+          ? def.folderPath === entry.folder.uri.fsPath
+          : true
+        if (
+          def?.type === 'run-mate-script-runner' &&
+          def.script === entry.name &&
+          folderMatch
+        ) {
+          await execution.terminate()
+        }
+      } catch {}
+    }
+    // Update immediately; onDidEndTask will also fire but that's harmless
+    statusBarProvider.setRunning(entry, false)
+  }
 
   const runEntry = async (entry) => {
     try {
@@ -28,18 +53,24 @@ function registerScriptCommands(context) {
       let hasNvmrc = entry.hasNvmrc
 
       if (!folder && Array.isArray(entry.variants)) {
-        const pick = await vscode.window.showQuickPick(
-          entry.variants.map((variant) => ({
-            label: variant.folder.name,
-            description: variant.folder.uri.fsPath,
-            variant,
-          })),
-          { placeHolder: `Select workspace folder for '${entry.name}'` }
-        )
-        if (!pick) return
-        folder = pick.variant.folder
-        pm = pick.variant.pm
-        hasNvmrc = pick.variant.hasNvmrc
+        if (entry.variants.length === 1) {
+          folder = entry.variants[0].folder
+          pm = entry.variants[0].pm
+          hasNvmrc = entry.variants[0].hasNvmrc
+        } else {
+          const pick = await vscode.window.showQuickPick(
+            entry.variants.map((variant) => ({
+              label: variant.folder.name,
+              description: variant.folder.uri.fsPath,
+              variant,
+            })),
+            { placeHolder: `Select workspace folder for '${entry.name}'` }
+          )
+          if (!pick) return
+          folder = pick.variant.folder
+          pm = pick.variant.pm
+          hasNvmrc = pick.variant.hasNvmrc
+        }
       }
 
       if (!folder) return
@@ -49,17 +80,16 @@ function registerScriptCommands(context) {
 
       let installFirst = alwaysInstall
       if (!installFirst && autoInstallMissing) {
-        const modulesExist = await checkNodeModulesExists(folder.uri)
-        if (!modulesExist) {
+        const depsInstalled = await checkDependenciesInstalled(folder.uri, pm)
+        if (!depsInstalled) {
           installFirst = true
         }
       }
 
-      const shouldRun = await terminateExistingIfNeeded(folder, entry.name, pm)
-      if (!shouldRun) return
-
       const task = createTask(folder, pm, entry.name, hasNvmrc, installFirst)
       await vscode.tasks.executeTask(task)
+      // Update immediately; onDidStartTask will also fire but that's harmless
+      statusBarProvider.setRunning(entry, true)
     } catch (error) {
       vscode.window.showErrorMessage(`RunMate: failed to run ${entry.name}. ${error.message}`)
     }
@@ -147,14 +177,54 @@ function registerScriptCommands(context) {
       console.log(`RunMate: found ${collected.length} total scripts.`);
 
       lastCollected = collected
-      const visible = collected.slice(0, maxButtons)
-      const overflow = collected.slice(maxButtons)
 
-      let priority = 110
-      visible.forEach(entry => statusBarProvider.createButton(entry, priority--))
+      const cfg2 = getConfig()
+      const pickerOnly = cfg2.get('pickerOnly', false)
+      const favs = getFavorites(context)
+      const isFav = (entry) => favs.has(makeFavoriteKey(entry))
 
-      if (overflow.length > 0) {
-        statusBarProvider.createOverflowButton(collected, priority)
+      const side = cfg2.get('statusBarSide', 'left')
+      const alignment = side === 'right'
+        ? vscode.StatusBarAlignment.Right
+        : vscode.StatusBarAlignment.Left
+      // Left: higher number = further left. Right: higher number = further right (use low base to stay left of the right section).
+      let priority = side === 'right' ? 10 : 110
+
+      if (pickerOnly) {
+        statusBarProvider.createPickerButton(collected, priority, showScriptPicker, alignment)
+      } else {
+        // Favorites occupy the first slots; remaining slots filled by priority order
+        const favEntries = collected.filter(isFav)
+        const nonFavEntries = collected.filter(e => !isFav(e))
+
+        let visible
+        if (favEntries.length > 0) {
+          const favVisible = favEntries.slice(0, maxButtons)
+          const remaining = maxButtons - favVisible.length
+          visible = remaining > 0
+            ? [...favVisible, ...nonFavEntries.slice(0, remaining)]
+            : favVisible
+        } else {
+          visible = collected.slice(0, maxButtons)
+        }
+
+        visible.forEach(entry => statusBarProvider.createButton(entry, priority--, alignment))
+
+        // Sync button states for any tasks already running (e.g. after a rebuild)
+        for (const execution of vscode.tasks.taskExecutions) {
+          const def = execution.task.definition
+          if (def?.type !== 'run-mate-script-runner') continue
+          const match = visible.find(en => {
+            if (en.name !== def.script) return false
+            if (en.folder) return en.folder.uri.fsPath === def.folderPath
+            return Array.isArray(en.variants) && en.variants.some(v => v.folder?.uri.fsPath === def.folderPath)
+          })
+          if (match) statusBarProvider.setRunning(match, true)
+        }
+
+        if (collected.length > visible.length) {
+          statusBarProvider.createOverflowButton(collected, priority, showScriptPicker, alignment)
+        }
       }
     } catch (error) {
       console.error('RunMate: error building buttons:', error);
@@ -177,18 +247,64 @@ function registerScriptCommands(context) {
       }
     }),
 
-    vscode.commands.registerCommand('run-mate-script-runner.showAllScripts', async () => {
-      const pick = await vscode.window.showQuickPick(
-        lastCollected.map(entry => ({
-          label: entry.name,
-          description: entry.folder ? entry.folder.name : "pick folder on run",
-          entry
-        })),
-        { placeHolder: "Select a script to run" }
-      )
-      if (pick) runEntry(pick.entry)
+    vscode.commands.registerCommand('run-mate-script-runner.showAllScripts', () => {
+      showScriptPicker(lastCollected)
     })
   )
+
+  /**
+   * QuickPick with per-item star buttons. Favorites sort to the top.
+   * Clicking the star button toggles the favourite state without closing the picker.
+   */
+  const showScriptPicker = (collected) => {
+    const qp = vscode.window.createQuickPick()
+    qp.placeholder = 'Select a script to run'
+    qp.matchOnDescription = true
+
+    const iconFull = new vscode.ThemeIcon('star-full')
+    const iconEmpty = new vscode.ThemeIcon('star-empty')
+
+    const buildItems = () => {
+      const favs = getFavorites(context)
+      return [...collected]
+        .sort((a, b) => {
+          const aFav = favs.has(makeFavoriteKey(a))
+          const bFav = favs.has(makeFavoriteKey(b))
+          if (aFav !== bFav) return aFav ? -1 : 1
+          return 0
+        })
+        .map(entry => {
+          const key = makeFavoriteKey(entry)
+          const isFav = favs.has(key)
+          return {
+            label: isFav ? `$(star-full) ${entry.name}` : entry.name,
+            description: entry.folder ? entry.folder.name : 'pick folder on run',
+            entry,
+            key,
+            buttons: [{
+              iconPath: isFav ? iconFull : iconEmpty,
+              tooltip: isFav ? 'Remove from favorites' : 'Add to favorites'
+            }]
+          }
+        })
+    }
+
+    qp.items = buildItems()
+
+    qp.onDidTriggerItemButton(async ({ item }) => {
+      await toggleFavorite(context, item.key)
+      qp.items = buildItems()
+    })
+
+    qp.onDidAccept(() => {
+      const [selected] = qp.selectedItems
+      qp.hide()
+      if (selected) runEntry(selected.entry)
+    })
+
+    qp.onDidHide(() => qp.dispose())
+    qp.show()
+  }
 
   const applyVisibility = () => buildButtons()
 
@@ -204,6 +320,16 @@ function registerScriptCommands(context) {
     watchers.forEach(w => context.subscriptions.push(w))
   }
 
+  const findEntryForTaskDef = (def) => {
+    return lastCollected.find(en => {
+      if (en.name !== def.script) return false
+      if (en.folder) return en.folder.uri.fsPath === def.folderPath
+      // pick-mode entry: match if any variant owns this folder path
+      if (Array.isArray(en.variants)) return en.variants.some(v => v.folder?.uri.fsPath === def.folderPath)
+      return false
+    })
+  }
+
   // Listeners
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
@@ -212,6 +338,18 @@ function registerScriptCommands(context) {
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       watchPackageJson()
       applyVisibility()
+    }),
+    vscode.tasks.onDidStartTask(e => {
+      const def = e.execution.task.definition
+      if (def?.type !== 'run-mate-script-runner') return
+      const entry = findEntryForTaskDef(def)
+      if (entry) statusBarProvider.setRunning(entry, true)
+    }),
+    vscode.tasks.onDidEndTask(e => {
+      const def = e.execution.task.definition
+      if (def?.type !== 'run-mate-script-runner') return
+      const entry = findEntryForTaskDef(def)
+      if (entry) statusBarProvider.setRunning(entry, false)
     })
   )
 

@@ -206,21 +206,114 @@ function registerTerminalMate(context) {
     const quickPickCommandId = 'terminal-mate._quickPick'
     const quickPickDisposable = vscode.commands.registerCommand(quickPickCommandId, async () => {
       try {
-        const picks = customEntries
-          .filter((entry) => entry && typeof entry.title === 'string' && typeof entry.command === 'string')
-          .map((entry, idx) => ({ label: entry.title.trim(), description: entry.command.trim(), idx }))
-          .filter((pick) => pick.label && pick.description)
-
-        if (picks.length === 0) {
-          vscode.window.showInformationMessage('No valid custom commands configured')
-          return
+        const addNewItem = {
+          label: '$(add) Add new command',
+          description: 'Save a new command to your list',
+          alwaysShow: true,
         }
 
-        const selected = await vscode.window.showQuickPick(picks, { placeHolder: 'Select a command to run' })
-        if (!selected) return
-        const entry = customEntries[selected.idx]
-        await runCustomEntry(entry)
-        await updatePinned()
+        const commandItems = customEntries
+          .map((entry, idx) => ({ entry, idx }))
+          .filter(({ entry }) => entry && typeof entry.title === 'string' && typeof entry.command === 'string' && entry.title.trim() && entry.command.trim())
+          .map(({ entry, idx }) => ({
+            label: entry.title.trim(),
+            description: entry.command.trim(),
+            idx,
+            buttons: [
+              { iconPath: new vscode.ThemeIcon('edit'), tooltip: 'Edit this command' },
+              { iconPath: new vscode.ThemeIcon('trash'), tooltip: 'Delete this command' },
+            ],
+          }))
+
+        const qp = vscode.window.createQuickPick()
+        qp.placeholder = 'Select a command to run'
+        qp.items = [addNewItem, ...commandItems]
+
+        const saveToConfig = async (updatedEntries) => {
+          const target = vscode.workspace.workspaceFolders?.length
+            ? vscode.ConfigurationTarget.Workspace
+            : vscode.ConfigurationTarget.Global
+          await vscode.workspace.getConfiguration('terminal-mate').update('customTerminals', updatedEntries, target)
+        }
+
+        qp.onDidTriggerItemButton(async ({ button, item }) => {
+          qp.hide()
+          const entry = customEntries[item.idx]
+          if (!entry) return
+
+          if (button.tooltip === 'Delete this command') {
+            const confirm = await vscode.window.showWarningMessage(
+              `TerminalMate: Are you sure you want to delete "${entry.title}"?`,
+              { modal: true },
+              'Delete'
+            )
+            if (confirm !== 'Delete') return
+
+            const allEntries = [...(getConfig().get('customTerminals', []) || [])]
+            allEntries.splice(item.idx, 1)
+            await saveToConfig(allEntries)
+            vscode.window.showInformationMessage(`TerminalMate: Command "${entry.title}" deleted.`)
+            return
+          }
+
+          // Edit command
+          const newTitle = await vscode.window.showInputBox({
+            prompt: 'Edit command title',
+            value: entry.title,
+            validateInput: (v) => v?.trim() ? null : 'Title cannot be empty',
+          })
+          if (newTitle === undefined) return
+
+          const newCommand = await vscode.window.showInputBox({
+            prompt: 'Edit shell command',
+            value: entry.command,
+            validateInput: (v) => v?.trim() ? null : 'Command cannot be empty',
+          })
+          if (newCommand === undefined) return
+
+          const allEntries = [...(getConfig().get('customTerminals', []) || [])]
+          allEntries[item.idx] = { ...entry, title: newTitle.trim(), command: newCommand.trim() }
+          await saveToConfig(allEntries)
+          vscode.window.showInformationMessage(`TerminalMate: Command "${newTitle.trim()}" updated.`)
+        })
+
+        qp.onDidAccept(async () => {
+          const [selected] = qp.selectedItems
+          if (!selected) { qp.hide(); return }
+
+          if (typeof selected.idx === 'undefined') {
+            // "Add new command" selected
+            qp.hide()
+            const title = await vscode.window.showInputBox({
+              prompt: 'Command title (shown as label)',
+              placeHolder: 'e.g. Deploy',
+              validateInput: (v) => v?.trim() ? null : 'Title cannot be empty',
+            })
+            if (!title?.trim()) return
+
+            const command = await vscode.window.showInputBox({
+              prompt: 'Shell command to run',
+              placeHolder: 'e.g. npm run deploy',
+              validateInput: (v) => v?.trim() ? null : 'Command cannot be empty',
+            })
+            if (!command?.trim()) return
+
+            const allEntries = [...(getConfig().get('customTerminals', []) || [])]
+            allEntries.push({ title: title.trim(), command: command.trim() })
+            await saveToConfig(allEntries)
+            vscode.window.showInformationMessage(`TerminalMate: Command "${title.trim()}" added.`)
+            return
+          }
+
+          qp.hide()
+          const entry = customEntries[selected.idx]
+          if (!entry) return
+          await runCustomEntry(entry)
+          await updatePinned()
+        })
+
+        qp.onDidHide(() => qp.dispose())
+        qp.show()
       } catch (error) {
         vscode.window.showErrorMessage(`TerminalMate: ${error.message}`)
       }
