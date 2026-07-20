@@ -2,7 +2,7 @@
   "name": "terminal-mate",
   "displayName": "TerminalMate",
   "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows. Automate repetitive shell commands with intelligent placeholders.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "icon-128.png",
@@ -141,6 +141,11 @@
             "type": "boolean",
             "default": true,
             "description": "Show the TerminalMate menu button in the status bar"
+          },
+          "terminal-mate.saveCommandsToWorkspace": {
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, new and edited commands are saved to workspace settings instead of global settings. Requires an open workspace folder."
           }
         }
       }

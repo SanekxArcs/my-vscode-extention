@@ -50,10 +50,22 @@ async function getRunCommand(pm, name, folderUri, hasNvmrc = false, installFirst
 
 async function createTask(folder, pm, name, hasNvmrc = false, installFirst = false) {
   const shellCmd = await getRunCommand(pm, name, folder.uri, hasNvmrc, installFirst);
-  const execution = new vscode.ShellExecution(shellCmd, {
+
+  const executionOptions = {
     cwd: folder.uri.fsPath,
     env: process.env,
-  });
+  };
+
+  // The nvm sourcing line is bash syntax (". ~/.nvm/nvm.sh && ..."), which
+  // breaks if the user's default integrated shell isn't bash/zsh (e.g. fish
+  // can't parse nvm.sh's case patterns). Force bash for this command
+  // regardless of the configured default shell.
+  if (hasNvmrc && process.platform !== "win32") {
+    executionOptions.executable = "bash";
+    executionOptions.shellArgs = ["-c"];
+  }
+
+  const execution = new vscode.ShellExecution(shellCmd, executionOptions);
 
   const task = new vscode.Task(
     { type: "run-mate-script-runner", script: name, pm, folderPath: folder.uri.fsPath, installFirst },

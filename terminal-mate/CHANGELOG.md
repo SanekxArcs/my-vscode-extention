@@ -2,6 +2,11 @@
 
 All notable changes to the **TerminalMate** extension will be documented in this file.
 
+## [1.3.0] - 2026-07-07
+
+- Commands are now always saved to global settings by default.
+- Added `terminal-mate.saveCommandsToWorkspace` setting (checkbox, default: off) — when enabled, new and edited commands are saved to workspace settings instead of global.
+
 ## [1.2.0] - 2026-05-28
 
 - Added "Delete" button to the command list for quick removal of unwanted snippets.

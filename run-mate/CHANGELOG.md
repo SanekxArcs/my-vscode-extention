@@ -2,6 +2,10 @@
 
 All notable changes to the **RunMate - Script Runner** extension will be documented in this file.
 
+## [1.4.4] - 2026-07-20
+
+- **Fix `.nvmrc` scripts on macOS/Linux with a non-bash default shell**: the nvm-sourcing command (`. ~/.nvm/nvm.sh && nvm use && ...`) is bash syntax and failed to parse when the user's default integrated terminal shell was fish (or another non-POSIX-sh shell), e.g. `source: Error ... Unexpected ')'`. RunMate now runs that command through `bash` explicitly instead of the configured default shell.
+
 ## [1.4.0] - 2026-06-25
 
 - **Dedicated stop button**: when a script is running the status bar button switches to a `$(stop-circle)` stop button (highlighted in warning colour). Clicking it stops the script. Once the task ends the button reverts to the normal run icon — no more toggle-on-click behaviour.

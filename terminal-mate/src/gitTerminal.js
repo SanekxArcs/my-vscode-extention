@@ -230,9 +230,12 @@ function registerTerminalMate(context) {
         qp.items = [addNewItem, ...commandItems]
 
         const saveToConfig = async (updatedEntries) => {
-          const target = vscode.workspace.workspaceFolders?.length
-            ? vscode.ConfigurationTarget.Workspace
-            : vscode.ConfigurationTarget.Global
+          const cfg = getConfig()
+          const saveToWorkspace = cfg.get('saveCommandsToWorkspace', false)
+          const target =
+            saveToWorkspace && vscode.workspace.workspaceFolders?.length
+              ? vscode.ConfigurationTarget.Workspace
+              : vscode.ConfigurationTarget.Global
           await vscode.workspace.getConfiguration('terminal-mate').update('customTerminals', updatedEntries, target)
         }
 
