@@ -10,12 +10,32 @@ Custom command snippets, history, and status bar shortcuts for professional term
 - **Quick Access**: Pinned last-used command for one-click re-runs and a persistent QuickPick history.
 - **Smart Re-use**: Automatically re-uses terminal windows matched by the snippet title or configuration.
 - **Cross-Platform**: Filter commands by OS (win32, darwin, linux) to keep your workspace clean.
+- **Scheduled Commands**: Run a saved or one-off command later, at a time of day, or on repeat. Click the clock button next to a command, or run `TerminalMate: Schedule Command`.
+- **Reorder Commands**: Use the ↑/↓ buttons next to a command in the menu to move it up or down. The menu stays open, so you can click several times.
+
+## ⏰ Scheduling
+When prompted "When should it run?", type one of these:
+
+| Input | Meaning |
+|-------|---------|
+| `10m`, `in 1h30m`, `45s` | Once, after a delay |
+| `14:30`, `at 14:30` | Once, at the next 14:30 |
+| `every 15m` | Repeats every 15 minutes (minimum 10s) |
+| `daily 09:00`, `every day at 09:00` | Every day at 09:00 |
+
+- Placeholders (`${input:}`, `${pick:}`, …) and dangerous-command confirmation are handled **when you schedule** the command, so nothing asks you questions when it runs. Snippets with a cursor marker can't be scheduled.
+- Scheduled runs use their own terminal (`<title> (scheduled)`), so they never type into a terminal you are working in.
+- Schedules are saved per workspace and survive restarts. Schedules run only while VS Code is open. If a one-time command was missed while VS Code was closed, you are asked whether to run it now. A missed repeating command skips ahead to its next time.
+- The status bar shows the next run with a countdown. Click it to see, run, or cancel your schedules.
+- To run commands while VS Code is closed, use your OS scheduler instead (`cron`/systemd timers, Task Scheduler, launchd).
 
 ## 🚀 Commands
 - `TerminalMate: Open Saved Commands`
 - `TerminalMate: Run Last Command`
 - `TerminalMate: Finish Snippet`
 - `TerminalMate: History`
+- `TerminalMate: Schedule Command`
+- `TerminalMate: Scheduled Commands`
 
 ## ⚙️ Settings (`terminal-mate`)
 - `customTerminals`: Your collection of command objects `{ title, command, cwd, reuse, os }`.

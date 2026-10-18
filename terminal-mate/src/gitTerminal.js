@@ -133,6 +133,17 @@ function registerTerminalMate(context) {
     return choice === 'Run'
   }
 
+  const getActiveFolder = () => {
+    let folder = null
+    try {
+      const activeDoc = vscode.window.activeTextEditor?.document
+      if (activeDoc && activeDoc.uri) {
+        folder = vscode.workspace.getWorkspaceFolder(activeDoc.uri)
+      }
+    } catch {}
+    return folder || vscode.workspace.workspaceFolders?.[0] || null
+  }
+
   const runCustomEntry = async (entry) => {
     const title = (entry.title || '').trim()
     let template = (entry.command || '').trim()
@@ -144,14 +155,7 @@ function registerTerminalMate(context) {
       if (!normalized.includes(process.platform)) return
     }
 
-    let folder = null
-    try {
-      const activeDoc = vscode.window.activeTextEditor?.document
-      if (activeDoc && activeDoc.uri) {
-        folder = vscode.workspace.getWorkspaceFolder(activeDoc.uri)
-      }
-    } catch {}
-    if (!folder) folder = vscode.workspace.workspaceFolders?.[0] || null
+    const folder = getActiveFolder()
 
     const { result, cursorSymbol } = await resolvePlaceholders(template, folder)
 
@@ -212,22 +216,31 @@ function registerTerminalMate(context) {
           alwaysShow: true,
         }
 
-        const commandItems = customEntries
-          .map((entry, idx) => ({ entry, idx }))
-          .filter(({ entry }) => entry && typeof entry.title === 'string' && typeof entry.command === 'string' && entry.title.trim() && entry.command.trim())
-          .map(({ entry, idx }) => ({
+        let entries = [...customEntries]
+        const isValidEntry = (entry) =>
+          entry && typeof entry.title === 'string' && typeof entry.command === 'string' && entry.title.trim() && entry.command.trim()
+
+        const buildCommandItems = () => {
+          const visible = entries
+            .map((entry, idx) => ({ entry, idx }))
+            .filter(({ entry }) => isValidEntry(entry))
+          return visible.map(({ entry, idx }, pos) => ({
             label: entry.title.trim(),
             description: entry.command.trim(),
             idx,
             buttons: [
+              ...(pos > 0 ? [{ iconPath: new vscode.ThemeIcon('arrow-up'), tooltip: 'Move up' }] : []),
+              ...(pos < visible.length - 1 ? [{ iconPath: new vscode.ThemeIcon('arrow-down'), tooltip: 'Move down' }] : []),
+              { iconPath: new vscode.ThemeIcon('clock'), tooltip: 'Schedule this command' },
               { iconPath: new vscode.ThemeIcon('edit'), tooltip: 'Edit this command' },
               { iconPath: new vscode.ThemeIcon('trash'), tooltip: 'Delete this command' },
             ],
           }))
+        }
 
         const qp = vscode.window.createQuickPick()
         qp.placeholder = 'Select a command to run'
-        qp.items = [addNewItem, ...commandItems]
+        qp.items = [addNewItem, ...buildCommandItems()]
 
         const saveToConfig = async (updatedEntries) => {
           const cfg = getConfig()
@@ -239,10 +252,44 @@ function registerTerminalMate(context) {
           await vscode.workspace.getConfiguration('terminal-mate').update('customTerminals', updatedEntries, target)
         }
 
+        // Reorders are saved in sequence so quick repeated clicks don't race each other
+        let pendingSave = Promise.resolve()
+
+        const moveEntry = (item, direction) => {
+          const visibleIdx = entries.map((entry, idx) => (isValidEntry(entry) ? idx : -1)).filter((idx) => idx !== -1)
+          const pos = visibleIdx.indexOf(item.idx)
+          const neighbor = visibleIdx[pos + direction]
+          if (pos === -1 || neighbor === undefined) return
+
+          entries = [...entries]
+          ;[entries[item.idx], entries[neighbor]] = [entries[neighbor], entries[item.idx]]
+
+          const commandItems = buildCommandItems()
+          qp.items = [addNewItem, ...commandItems]
+          const moved = commandItems.find((i) => i.idx === neighbor)
+          if (moved) qp.activeItems = [moved]
+
+          const snapshot = entries
+          pendingSave = pendingSave
+            .then(() => saveToConfig(snapshot))
+            .catch((error) => vscode.window.showErrorMessage(`TerminalMate: ${error.message}`))
+        }
+
         qp.onDidTriggerItemButton(async ({ button, item }) => {
+          if (button.tooltip === 'Move up' || button.tooltip === 'Move down') {
+            moveEntry(item, button.tooltip === 'Move up' ? -1 : 1)
+            return
+          }
+
           qp.hide()
-          const entry = customEntries[item.idx]
+          await pendingSave
+          const entry = entries[item.idx]
           if (!entry) return
+
+          if (button.tooltip === 'Schedule this command') {
+            await vscode.commands.executeCommand('terminal-mate.scheduleCommand', entry)
+            return
+          }
 
           if (button.tooltip === 'Delete this command') {
             const confirm = await vscode.window.showWarningMessage(
@@ -301,6 +348,7 @@ function registerTerminalMate(context) {
             })
             if (!command?.trim()) return
 
+            await pendingSave
             const allEntries = [...(getConfig().get('customTerminals', []) || [])]
             allEntries.push({ title: title.trim(), command: command.trim() })
             await saveToConfig(allEntries)
@@ -309,7 +357,7 @@ function registerTerminalMate(context) {
           }
 
           qp.hide()
-          const entry = customEntries[selected.idx]
+          const entry = entries[selected.idx]
           if (!entry) return
           await runCustomEntry(entry)
           await updatePinned()
@@ -461,7 +509,7 @@ function registerTerminalMate(context) {
 
   buildCustomTerminalButtons()
 
-  return { buildCustomTerminalButtons }
+  return { buildCustomTerminalButtons, resolvePlaceholders, confirmDangerousIfNeeded, pushHistory, getActiveFolder }
 }
 
 module.exports = { registerTerminalMate }

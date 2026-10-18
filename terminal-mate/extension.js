@@ -1,7 +1,9 @@
 const { registerTerminalMate } = require('./src/gitTerminal')
+const { registerScheduler } = require('./src/scheduler')
 
 function activate(context) {
-  registerTerminalMate(context)
+  const terminalMate = registerTerminalMate(context)
+  registerScheduler(context, terminalMate)
 }
 
 function deactivate() {}
