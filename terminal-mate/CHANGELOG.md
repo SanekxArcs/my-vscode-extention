@@ -2,6 +2,27 @@
 
 All notable changes to the **TerminalMate** extension will be documented in this file.
 
+## [1.5.1] - 2026-11-17
+
+A small update: one important fix, and much better help for people who are new to TerminalMate.
+
+You do not have to change anything after updating. Your saved commands are kept.
+
+### Fixed
+
+- **Risky commands ran without asking.** In 1.5.0 the built-in list of risky commands was broken, so `git reset --hard`, `git clean -fd` and a force push ran without the "Continue?" question. The question is back. If you changed `dangerousCommandPatterns` yourself, your own list was not affected.
+- **The `Last:` button** had two spaces between `Last:` and the name of the command.
+
+### New
+
+- **A getting started guide inside VS Code.** Six short steps: save a command, let it ask questions, keep the list tidy, chains and keyboard shortcuts, running later, and good to know. Open it with **TerminalMate: Open the Getting Started Guide**.
+- **Pictures in the README**, taken from a real VS Code window.
+
+### Changed
+
+- **The README was rewritten in plain language**, with a step-by-step start, a table for every button, and a "Problems and answers" section.
+- **Every setting has a new description** that says what it does in simple words. In the Settings window they are now in a sensible order: the list first, then the status bar, then running.
+
 ## [1.5.0] - 2026-11-17
 
 ### Added

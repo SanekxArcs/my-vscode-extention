@@ -338,12 +338,12 @@ function registerTerminalMate(context) {
       pinnedItem = null
     }
     const cfg = getConfig()
-    if (!cfg.get('showStatusBar', true) || !cfg.get('pinLastCustomTerminal', false)) return
+    if (!cfg.get('showStatusBar', true) || !cfg.get('pinLastCustomTerminal', true)) return
     if (!isValidEntry(cachedLastCommand)) return
-    const prefix = (cfg.get('pinLastCustomTerminalLabelPrefix', '★') || '★').toString()
+    const prefix = (cfg.get('pinLastCustomTerminalLabelPrefix', 'Last: ') || 'Last: ').toString()
     pinnedItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, STATUS_PRIORITY - 1)
-    pinnedItem.text = `${prefix} ${cachedLastCommand.title}`
-    pinnedItem.tooltip = `Run last custom: ${describeEntry(cachedLastCommand)}`
+    pinnedItem.text = `${prefix}${/\s$/.test(prefix) ? '' : ' '}${cachedLastCommand.title}`
+    pinnedItem.tooltip = `Run the last command again: ${describeEntry(cachedLastCommand)}`
     pinnedItem.command = PIN_COMMAND_ID
     pinnedItem.show()
   }
@@ -777,6 +777,16 @@ function registerTerminalMate(context) {
     vscode.commands.registerCommand('terminal-mate.openCommands', guarded(openPicker)),
     vscode.commands.registerCommand(PIN_COMMAND_ID, guarded(runLast)),
     vscode.commands.registerCommand('terminal-mate.runLastCommand', guarded(runLast)),
+    vscode.commands.registerCommand(
+      'terminal-mate.openGuide',
+      guarded(() =>
+        vscode.commands.executeCommand(
+          'workbench.action.openWalkthrough',
+          `${context.extension.id}#terminalmate.gettingStarted`,
+          false
+        )
+      )
+    ),
     // For keybindings.json: { "key": "…", "command": "terminal-mate.run", "args": "Command title" }
     vscode.commands.registerCommand(
       'terminal-mate.run',

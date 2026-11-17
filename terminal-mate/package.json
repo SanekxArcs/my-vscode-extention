@@ -1,8 +1,8 @@
 {
   "name": "terminal-mate",
   "displayName": "TerminalMate",
-  "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows. Automate repetitive shell commands with intelligent placeholders.",
-  "version": "1.5.0",
+  "description": "Save the terminal commands you type again and again, and run them with one click. Commands can ask you questions, run in a row, run later, or run from a keyboard shortcut.",
+  "version": "1.5.1",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "icon-128.png",
@@ -17,6 +17,11 @@
   },
   "engines": {
     "vscode": "^1.64.0"
+  },
+  "scripts": {
+    "build": "vsce package --baseImagesUrl https://raw.githubusercontent.com/SanekxArcs/my-vscode-extention/main/terminal-mate --baseContentUrl https://github.com/SanekxArcs/my-vscode-extention/blob/main/terminal-mate",
+    "push": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/SanekxArcs/my-vscode-extention/main/terminal-mate --baseContentUrl https://github.com/SanekxArcs/my-vscode-extention/blob/main/terminal-mate",
+    "shots": "node test/shots/shoot.js . images && node test/shots/shoot.js . images gif"
   },
   "categories": [
     "Other"
@@ -40,7 +45,8 @@
     "onCommand:terminal-mate.history",
     "onCommand:terminal-mate.run",
     "onCommand:terminal-mate.importCommands",
-    "onCommand:terminal-mate.exportCommands"
+    "onCommand:terminal-mate.exportCommands",
+    "onCommand:terminal-mate.openGuide"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -76,6 +82,73 @@
       {
         "command": "terminal-mate.exportCommands",
         "title": "TerminalMate: Export Commands"
+      },
+      {
+        "command": "terminal-mate.openGuide",
+        "title": "TerminalMate: Open the Getting Started Guide"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "terminalmate.gettingStarted",
+        "title": "Get started with TerminalMate",
+        "description": "Save the commands you type again and again, and run them with one click. Six short steps.",
+        "steps": [
+          {
+            "id": "save",
+            "title": "Save your first command",
+            "description": "Look at the status bar, the thin bar at the bottom of the window. The **TM** button opens your list of saved commands.\n\nChoose **Add new command**, give it a name and type the command. Next time you only pick the name.\n\n[Open my commands](command:terminal-mate.openCommands)",
+            "media": {
+              "markdown": "walkthrough/save.md"
+            },
+            "completionEvents": [
+              "onCommand:terminal-mate.openCommands"
+            ]
+          },
+          {
+            "id": "ask",
+            "title": "Let a command ask you a question",
+            "description": "Some part of a command is different every time: a branch name, a port, a message.\n\nWrite ``${input:Branch name}`` in that place. TerminalMate asks you for it each time and puts your answer into the command.\n\n[Open my commands](command:terminal-mate.openCommands)",
+            "media": {
+              "markdown": "walkthrough/ask.md"
+            }
+          },
+          {
+            "id": "organize",
+            "title": "Keep the list tidy",
+            "description": "Point at a row in the list. Small buttons appear: move it up or down, schedule it, edit it, archive it, delete it.\n\nThe pencil also puts a command into a **group**, so related commands stay together under a heading.\n\n[Open my commands](command:terminal-mate.openCommands)",
+            "media": {
+              "markdown": "walkthrough/organize.md"
+            }
+          },
+          {
+            "id": "chains",
+            "title": "Chains and keyboard shortcuts",
+            "description": "A **chain** runs saved commands one after another, for example Build and then Deploy. It stops when a step fails.\n\nAny saved command or chain can also get its own keyboard shortcut.\n\n[Open my commands](command:terminal-mate.openCommands)",
+            "media": {
+              "markdown": "walkthrough/chains.md"
+            }
+          },
+          {
+            "id": "later",
+            "title": "Run a command later",
+            "description": "Run a command in 10 minutes, at 14:30, every 15 minutes or every day at 09:00.\n\nThe status bar counts down to the next run.\n\n[Schedule a command](command:terminal-mate.scheduleCommand)",
+            "media": {
+              "markdown": "walkthrough/later.md"
+            },
+            "completionEvents": [
+              "onCommand:terminal-mate.scheduleCommand"
+            ]
+          },
+          {
+            "id": "help",
+            "title": "Good to know",
+            "description": "TerminalMate asks before it runs a risky command, remembers what you ran, and keeps your last command one click away.\n\n[Show my history](command:terminal-mate.history)\n\n[Open TerminalMate's settings](command:workbench.action.openSettings?%22terminal-mate%22)",
+            "media": {
+              "markdown": "walkthrough/help.md"
+            }
+          }
+        ]
       }
     ],
     "configuration": [
@@ -84,7 +157,8 @@
         "properties": {
           "terminal-mate.customTerminals": {
             "type": "array",
-            "markdownDescription": "Your saved commands. Each item needs a `title` and either a `command` or a `chain`. Example:\n```json\n{\n  \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\"\n}\n```",
+            "order": 1,
+            "markdownDescription": "Your saved commands. You normally do not edit this by hand: use the **TM** button in the status bar and **Add new command**.\n\nEach item needs a `title` (the name you see in the list) and either a `command` (what to run) or a `chain` (names of saved commands to run one after another). Example:\n```json\n{ \"title\": \"Amend\", \"command\": \"git commit --amend --no-verify\" }\n```",
             "default": [],
             "items": {
               "type": "object",
@@ -94,41 +168,41 @@
               "properties": {
                 "title": {
                   "type": "string",
-                  "description": "Label in the menu and name of the terminal. Chains and keybindings refer to a command by this title."
+                  "description": "The name you see in the list. The terminal gets the same name. Chains and keyboard shortcuts find a command by this name."
                 },
                 "command": {
                   "type": "string",
-                  "markdownDescription": "Shell snippet. Supports placeholders: ${input:Label}, ${pick:Label|opt1|opt2}, ${env:VAR}, ${workspaceFolder}, ${clipboard}."
+                  "markdownDescription": "What to type into the terminal. You can leave blanks that are filled in when the command runs:\n\n- `${input:Label}` asks you to type a value\n- `${pick:Label|one|two}` lets you choose from a list\n- `${clipboard}` is the text you copied last\n- `${workspaceFolder}` is the path of the open folder\n- `${env:NAME}` is an environment variable"
                 },
                 "cwd": {
                   "type": "string",
-                  "description": "Working directory for the terminal (optional)"
+                  "description": "The folder the command runs in. Leave it out to use the folder you have open."
                 },
                 "reuse": {
                   "type": "boolean",
-                  "description": "Override terminal reuse behavior for this snippet"
+                  "description": "true: run in the terminal this command used before. false: open a new terminal every time. Leave it out to follow the \"Reuse Terminal By Title\" setting."
                 },
                 "os": {
                   "type": [
                     "string",
                     "array"
                   ],
-                  "description": "Limit snippet to specific operating systems (win32|darwin|linux)"
+                  "description": "Show this command only on some systems: \"win32\" (Windows), \"darwin\" (macOS), \"linux\". One name or a list of names."
                 },
                 "chain": {
                   "type": "array",
                   "items": {
                     "type": "string"
                   },
-                  "description": "Use instead of \"command\": titles of saved commands to run one after another in the same terminal. The chain stops at the first step that fails."
+                  "description": "Use instead of \"command\": the names of saved commands to run one after another in the same terminal. The chain stops at the first step that fails."
                 },
                 "group": {
                   "type": "string",
-                  "description": "Group name. Commands with the same group are shown together under a heading in the menu."
+                  "description": "A group name. Commands with the same group are shown together under a heading in the list."
                 },
                 "archived": {
                   "type": "boolean",
-                  "description": "Hide this command from the main list. Archived commands stay available under the Archive item at the bottom."
+                  "description": "true hides this command from the main list. It stays available under \"Archive\" at the bottom of the list."
                 }
               },
               "anyOf": [
@@ -145,82 +219,95 @@
               ]
             }
           },
-          "terminal-mate.customTerminalsButtonLabel": {
-            "type": "string",
-            "default": "TM",
-            "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+          "terminal-mate.saveCommandsToWorkspace": {
+            "type": "boolean",
+            "order": 2,
+            "default": false,
+            "markdownDescription": "Where new and changed commands are saved.\n\n- Off: in your own settings. You see the same commands in every project.\n- On: in `.vscode/settings.json` of the open folder. Only this project has them, and you can commit the file to share them with your team."
           },
           "terminal-mate.sortCommands": {
             "type": "string",
+            "order": 3,
             "enum": [
               "manual",
               "recent",
               "frequent"
             ],
             "enumDescriptions": [
-              "Your own order, changed with the Move up / Move down buttons",
-              "Most recently used first",
-              "Most often used first"
+              "Your own order. Change it with the arrows on a row.",
+              "The command you used last comes first.",
+              "The command you use most often comes first."
             ],
             "default": "manual",
-            "description": "Order of commands in the menu (applied inside each group)"
+            "description": "The order of commands in the list. Inside a group the same order is used."
           },
-          "terminal-mate.cursorSymbol": {
-            "type": "string",
-            "default": "<|>",
-            "description": "Marker inside snippets for manual cursor placement before finishing the command"
-          },
-          "terminal-mate.showPreviewForCustomTerminals": {
+          "terminal-mate.showStatusBar": {
             "type": "boolean",
-            "default": false,
-            "description": "Show a modal preview of the final command before running"
+            "order": 4,
+            "default": true,
+            "description": "Show TerminalMate's buttons in the status bar (the thin bar at the bottom of the window). When off, open the list with the command \"TerminalMate: Open Saved Commands\"."
+          },
+          "terminal-mate.customTerminalsButtonLabel": {
+            "type": "string",
+            "order": 5,
+            "default": "TM",
+            "description": "The text on the status bar button that opens your commands."
+          },
+          "terminal-mate.pinLastCustomTerminal": {
+            "type": "boolean",
+            "order": 6,
+            "default": true,
+            "description": "Show a second status bar button with the command you ran last. One click runs it again."
+          },
+          "terminal-mate.pinLastCustomTerminalLabelPrefix": {
+            "type": "string",
+            "order": 7,
+            "default": "Last: ",
+            "description": "The text in front of the command name on the \"last command\" button."
           },
           "terminal-mate.reuseTerminalByTitle": {
             "type": "boolean",
+            "order": 8,
             "default": true,
-            "description": "Reuse existing terminal windows matched by snippet title"
-          },
-          "terminal-mate.customHistorySize": {
-            "type": "number",
-            "default": 10,
-            "description": "Maximum number of executed commands to keep in history"
+            "description": "On: a command runs in the terminal it used before, so you do not collect dozens of terminals. Off: every run opens a new terminal."
           },
           "terminal-mate.confirmDangerousCommands": {
             "type": "boolean",
+            "order": 9,
             "default": true,
-            "description": "Ask for confirmation before running a command that matches one of the dangerous command patterns"
+            "description": "Ask \"Continue?\" before a risky command runs. Which commands count as risky is set in \"Dangerous Command Patterns\"."
           },
           "terminal-mate.dangerousCommandPatterns": {
             "type": "array",
+            "order": 10,
             "items": {
               "type": "string"
             },
             "default": [
-              "gits+resets+--hard",
-              "gits+clean[sS]*(-fd|--force)",
-              "gits+push[sS]*s(-f|--force)(s|$)"
+              "git\\s+reset\\s+--hard",
+              "git\\s+clean[\\s\\S]*(-fd|--force)",
+              "git\\s+push[\\s\\S]*\\s(-f|--force)(\\s|$)"
             ],
-            "markdownDescription": "Regular expressions (case-insensitive) for commands that need confirmation before they run. Add your own, for example `rms+-rf` or `drops+database`."
+            "markdownDescription": "Which commands count as risky. Out of the box: `git reset --hard`, `git clean -fd` and a force push.\n\nEach line is a regular expression; upper and lower case do not matter. Add your own, for example `rm\\s+-rf` or `drop\\s+database`. (`\\s+` means \"one or more spaces\". In `settings.json` write the backslash twice: `rm\\\\s+-rf`.)"
           },
-          "terminal-mate.pinLastCustomTerminal": {
+          "terminal-mate.showPreviewForCustomTerminals": {
             "type": "boolean",
-            "default": true,
-            "description": "Pin the most recently used command to the status bar for one-click access"
-          },
-          "terminal-mate.pinLastCustomTerminalLabelPrefix": {
-            "type": "string",
-            "default": "Last: ",
-            "description": "Prefix used for the pinned last-command status bar button"
-          },
-          "terminal-mate.showStatusBar": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show the TerminalMate menu button in the status bar"
-          },
-          "terminal-mate.saveCommandsToWorkspace": {
-            "type": "boolean",
+            "order": 11,
             "default": false,
-            "description": "When enabled, new and edited commands are saved to workspace settings instead of global settings. Requires an open workspace folder."
+            "description": "Show the finished command in a window and wait for you to click \"Run\" before every run. Useful while you are still learning what your commands do."
+          },
+          "terminal-mate.customHistorySize": {
+            "type": "number",
+            "order": 12,
+            "default": 10,
+            "minimum": 1,
+            "description": "How many of the commands you ran are kept in \"TerminalMate: History\"."
+          },
+          "terminal-mate.cursorSymbol": {
+            "type": "string",
+            "order": 13,
+            "default": "<|>",
+            "markdownDescription": "A marker for \"stop here and let me type\". TerminalMate types the command up to the marker and waits. You type the missing part in the terminal, then click **Finish snippet** in the status bar and the rest is added.\n\nExample: `git commit -m \"<|>\" --no-verify`"
           }
         }
       }
