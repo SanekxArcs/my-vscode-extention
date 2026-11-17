@@ -1,138 +1,141 @@
-const vscode = require('vscode')
+const fs = require('fs')
+const path = require('path')
 const { parse } = require('jsonc-parser')
 
-function getWorkspaceFolders() {
-  return vscode.workspace.workspaceFolders ?? []
-}
+/**
+ * File-system helpers. Everything here is plain Node (no vscode), and every
+ * lookup is done when a script is started, never cached from the moment the
+ * buttons were built: lockfiles, node_modules and version files change.
+ */
 
-function slugify(id) {
-  return String(id)
-    .replace(/[^a-z0-9\-]/gi, '_')
-    .replace(/_{2,}/g, '_')
-    .toLowerCase();
-}
-
-async function readPackageJson(uri) {
+async function exists(p) {
   try {
-    const bytes = await vscode.workspace.fs.readFile(uri)
-    const text = Buffer.from(bytes).toString('utf8')
-    return parse(text)
-  } catch (error) {
-    try {
-      await vscode.workspace.fs.stat(uri);
-      vscode.window.showErrorMessage(
-        `RunMate: invalid or unreadable package.json at ${uri.fsPath}`
-      );
-    } catch {
-    }
+    await fs.promises.stat(p)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function readText(p) {
+  try {
+    return await fs.promises.readFile(p, 'utf8')
+  } catch {
     return null
   }
 }
 
-async function checkNvmrcExists(folderUri) {
+/** Returns the parsed package.json, or null when missing or not an object. */
+async function readPackageJson(file) {
+  const text = await readText(file)
+  if (text === null) return null
   try {
-    const nvmrcUri = vscode.Uri.joinPath(folderUri, ".nvmrc");
-    await vscode.workspace.fs.stat(nvmrcUri);
-    return true;
+    const pkg = parse(text)
+    return pkg && typeof pkg === 'object' && !Array.isArray(pkg) ? pkg : null
   } catch {
-    return false;
+    return null
   }
+}
+
+function isInside(child, parent) {
+  const rel = path.relative(parent, child)
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))
 }
 
 /**
- * nvm-windows (coreybutler) doesn't read .nvmrc automatically like POSIX nvm
- * does, so callers on Windows need the version string to pass explicitly.
+ * Directories from `startDir` up to `stopDir` (inclusive). A nested package
+ * inherits the lockfile, node_modules and Node version of the project root.
  */
-async function readNvmrcVersion(folderUri) {
-  try {
-    const nvmrcUri = vscode.Uri.joinPath(folderUri, ".nvmrc");
-    const bytes = await vscode.workspace.fs.readFile(nvmrcUri);
-    const version = Buffer.from(bytes).toString('utf8').trim();
-    return version || null;
-  } catch {
-    return null;
+function ancestorDirs(startDir, stopDir) {
+  const dirs = []
+  let dir = path.resolve(startDir)
+  const stop = stopDir && isInside(dir, path.resolve(stopDir)) ? path.resolve(stopDir) : dir
+  for (;;) {
+    dirs.push(dir)
+    if (dir === stop) break
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
   }
+  return dirs
 }
 
-async function detectPackageManager(folderUri, pkg) {
-  const pmField = pkg?.packageManager
-  if (typeof pmField === 'string') {
-    if (pmField.startsWith('pnpm')) return 'pnpm'
-    if (pmField.startsWith('yarn@1')) return 'yarn'
-    if (pmField.startsWith('yarn')) return 'yarn-berry'  // v2+
-    if (pmField.startsWith('bun')) return 'bun'
-  }
+function parsePackageManagerField(value) {
+  if (typeof value !== 'string') return null
+  if (value.startsWith('pnpm')) return 'pnpm'
+  if (value.startsWith('yarn@1')) return 'yarn'
+  if (value.startsWith('yarn')) return 'yarn-berry'
+  if (value.startsWith('bun')) return 'bun'
+  if (value.startsWith('npm')) return 'npm'
+  return null
+}
 
-  const exists = async (name) => {
-    try {
-      await vscode.workspace.fs.stat(vscode.Uri.joinPath(folderUri, name))
-      return true
-    } catch {
-      return false
+const LOCKFILES = [
+  ['pnpm-lock.yaml', 'pnpm'],
+  ['.yarnrc.yml', 'yarn-berry'],
+  ['yarn.lock', 'yarn'],
+  ['bun.lock', 'bun'],
+  ['bun.lockb', 'bun'],
+  ['package-lock.json', 'npm'],
+  ['npm-shrinkwrap.json', 'npm'],
+]
+
+/**
+ * Detects the package manager, looking at the project folder first and then
+ * at its parents up to the workspace folder. Returns the folder that decided
+ * it (`rootDir`), which is where a monorepo keeps its lockfile.
+ */
+async function detectPackageManager(projectDir, stopDir) {
+  for (const dir of ancestorDirs(projectDir, stopDir)) {
+    const pkg = await readPackageJson(path.join(dir, 'package.json'))
+    const fromField = parsePackageManagerField(pkg?.packageManager)
+    if (fromField) return { pm: fromField, rootDir: dir, source: 'packageManager field' }
+    for (const [file, pm] of LOCKFILES) {
+      if (await exists(path.join(dir, file))) return { pm, rootDir: dir, source: file }
     }
+    if (await exists(path.join(dir, 'bunfig.toml'))) return { pm: 'bun', rootDir: dir, source: 'bunfig.toml' }
   }
-
-  if (await exists('pnpm-lock.yaml')) return 'pnpm'
-  if (await exists('.yarnrc.yml')) return 'yarn-berry'  // Yarn Berry uses .yarnrc.yml
-  if (await exists('yarn.lock')) return 'yarn'
-  if (await exists('bun.lockb')) return 'bun'
-  if (await exists('bun.lock')) return 'bun'
-  return 'npm'
+  return { pm: 'npm', rootDir: projectDir, source: 'default' }
 }
 
-async function checkNodeModulesExists(folderUri) {
-  try {
-    const modulesUri = vscode.Uri.joinPath(folderUri, "node_modules");
-    await vscode.workspace.fs.stat(modulesUri);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * For Yarn Berry (v2+), dependencies may be installed without a node_modules
- * directory (PnP mode). Check for the Yarn-specific install-state file or
- * PnP loader as evidence that `yarn install` has already been run.
- */
-async function checkYarnInstallState(folderUri) {
-  const exists = async (name) => {
-    try {
-      await vscode.workspace.fs.stat(vscode.Uri.joinPath(folderUri, name));
-      return true;
-    } catch {
-      return false;
-    }
-  };
-  return (
-    (await exists(".yarn/install-state.gz")) ||
-    (await exists(".pnp.cjs")) ||
-    (await exists(".pnp.js"))
-  );
-}
-
-/**
- * Returns true when dependencies appear to be installed for the given PM.
- * For yarn we check both node_modules (node-modules linker) and the
- * Yarn Berry install-state / PnP artefacts.
- */
-async function checkDependenciesInstalled(folderUri, pm) {
+async function hasInstallMarker(dir, pm) {
+  if (await exists(path.join(dir, 'node_modules'))) return true
   if (pm === 'yarn' || pm === 'yarn-berry') {
+    // Yarn Berry in PnP mode installs without a node_modules folder.
     return (
-      (await checkNodeModulesExists(folderUri)) ||
-      (await checkYarnInstallState(folderUri))
-    );
+      (await exists(path.join(dir, '.yarn', 'install-state.gz'))) ||
+      (await exists(path.join(dir, '.pnp.cjs'))) ||
+      (await exists(path.join(dir, '.pnp.js')))
+    )
   }
-  return checkNodeModulesExists(folderUri);
+  return false
+}
+
+/**
+ * True when dependencies look installed. A workspace package can have its
+ * dependencies hoisted to the root, so the lockfile folder counts too.
+ */
+async function checkDependenciesInstalled(projectDir, pm, rootDir) {
+  if (await hasInstallMarker(projectDir, pm)) return true
+  if (rootDir && path.resolve(rootDir) !== path.resolve(projectDir)) {
+    return hasInstallMarker(rootDir, pm)
+  }
+  return false
+}
+
+/** True when the package declares at least one dependency to install. */
+function hasDependencies(pkg) {
+  return ['dependencies', 'devDependencies', 'optionalDependencies'].some(
+    (field) => pkg && typeof pkg[field] === 'object' && pkg[field] !== null && Object.keys(pkg[field]).length > 0
+  )
 }
 
 module.exports = {
-  getWorkspaceFolders,
-  slugify,
+  exists,
+  hasDependencies,
+  readText,
   readPackageJson,
-  checkNvmrcExists,
-  readNvmrcVersion,
+  ancestorDirs,
   detectPackageManager,
-  checkNodeModulesExists,
   checkDependenciesInstalled,
 }

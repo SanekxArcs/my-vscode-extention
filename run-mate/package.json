@@ -1,8 +1,8 @@
 {
   "name": "run-mate-script-runner",
   "displayName": "RunMate - Script Runner",
-  "description": "Quick script runner with intelligent status bar buttons for package.json scripts. Auto-detects npm, pnpm, yarn, and bun with multi-root workspace support.",
-  "version": "1.4.4",
+  "description": "Run package.json scripts (and Deno tasks, Makefile targets, just recipes) from the status bar. Finds nested projects and picks the right package manager, shell and Node version for you.",
+  "version": "1.5.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "assets/icon-128.png",
@@ -15,7 +15,7 @@
     "url": "https://github.com/SanekxArcs/my-vscode-extention/issues"
   },
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.75.0"
   },
   "categories": [
     "Other"
@@ -24,23 +24,30 @@
     "workspace"
   ],
   "scripts": {
-    "build": "vsce package",
-    "push": "vsce publish"
+    "build": "vsce package --baseImagesUrl https://raw.githubusercontent.com/SanekxArcs/my-vscode-extention/main/run-mate --baseContentUrl https://github.com/SanekxArcs/my-vscode-extention/blob/main/run-mate",
+    "push": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/SanekxArcs/my-vscode-extention/main/run-mate --baseContentUrl https://github.com/SanekxArcs/my-vscode-extention/blob/main/run-mate",
+    "test": "node test/run.js",
+    "test:host": "node test/host/launch.js",
+    "test:linux": "node test/docker/run.js",
+    "shots": "node test/shots/shoot.js . images && node test/shots/shoot.js . images gif"
   },
   "keywords": [
     "npm",
     "pnpm",
     "yarn",
     "bun",
+    "deno",
+    "make",
+    "just",
     "scripts",
     "tasks",
     "runner",
-    "quick-launch"
+    "monorepo",
+    "nvm",
+    "fnm",
+    "status bar"
   ],
   "activationEvents": [
-    "onCommand:run-mate-script-runner.showAllScripts",
-    "onCommand:run-mate-script-runner.stopRunningScripts",
-    "workspaceContains:package.json",
     "onStartupFinished"
   ],
   "main": "./extension.js",
@@ -50,14 +57,85 @@
   "contributes": {
     "commands": [
       {
+        "command": "run-mate-script-runner.showAllScripts",
+        "title": "Show All Scripts",
+        "category": "RunMate"
+      },
+      {
+        "command": "run-mate-script-runner.runLastScript",
+        "title": "Run Last Script Again",
+        "category": "RunMate"
+      },
+      {
+        "command": "run-mate-script-runner.newGroup",
+        "title": "New Group (start several scripts with one click)",
+        "category": "RunMate"
+      },
+      {
         "command": "run-mate-script-runner.stopRunningScripts",
         "title": "Stop Running Scripts",
         "category": "RunMate"
       },
       {
-        "command": "run-mate-script-runner.showAllScripts",
-        "title": "Show All Scripts",
+        "command": "run-mate-script-runner.openGuide",
+        "title": "Open the Getting Started Guide",
         "category": "RunMate"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "runmate.gettingStarted",
+        "title": "Get started with RunMate",
+        "description": "Run your project's scripts with one click. Five short steps.",
+        "steps": [
+          {
+            "id": "run",
+            "title": "Run a script",
+            "description": "RunMate reads the scripts of your project and shows them as buttons in the status bar, the thin bar at the bottom of the window.\n\nClick a button to run a script. Click it again to stop it.\n\n[Open the script list](command:run-mate-script-runner.showAllScripts)",
+            "media": {
+              "markdown": "walkthrough/run.md"
+            },
+            "completionEvents": [
+              "onCommand:run-mate-script-runner.showAllScripts",
+              "onCommand:run-mate-script-runner.runScript"
+            ]
+          },
+          {
+            "id": "arrange",
+            "title": "Arrange the list your way",
+            "description": "Every row in the script list has small buttons: move it up or down, star it, hide it.\n\nThe status bar follows the same order, and favorites get the first buttons.\n\n[Open the script list](command:run-mate-script-runner.showAllScripts)",
+            "media": {
+              "markdown": "walkthrough/arrange.md"
+            }
+          },
+          {
+            "id": "options",
+            "title": "Run with arguments, an env file or another shell",
+            "description": "The terminal button on a row opens **Run with options**: add arguments such as ``--watch``, choose an env file such as ``.env.staging``, or run once in another shell.\n\nUse it again quickly with **Run Last Script Again**.\n\n[Run the last script again](command:run-mate-script-runner.runLastScript)",
+            "media": {
+              "markdown": "walkthrough/options.md"
+            }
+          },
+          {
+            "id": "groups",
+            "title": "Start several scripts with one click",
+            "description": "A group is a button that starts several scripts together, for example the frontend and the backend.\n\nYou can share a group with your team, so everyone gets the same button.\n\n[Make a group](command:run-mate-script-runner.newGroup)",
+            "media": {
+              "markdown": "walkthrough/groups.md"
+            },
+            "completionEvents": [
+              "onCommand:run-mate-script-runner.newGroup"
+            ]
+          },
+          {
+            "id": "help",
+            "title": "RunMate looks after the boring parts",
+            "description": "The right package manager, the right folder, the right Node.js version, a free port. If something is missing or in the way, RunMate tells you and offers to fix it.\n\n[Open RunMate settings](command:workbench.action.openSettings?%5B%22%40ext%3ASanekxArcs.run-mate-script-runner%22%5D)",
+            "media": {
+              "markdown": "walkthrough/help.md"
+            }
+          }
+        ]
       }
     ],
     "keybindings": [
@@ -68,12 +146,117 @@
     ],
     "configuration": [
       {
-        "title": "run-mate-script-runner",
+        "title": "RunMate",
         "properties": {
+          "run-mate-script-runner.statusBarLayout": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "scripts",
+              "projects",
+              "picker"
+            ],
+            "default": "auto",
+            "markdownDescription": "What RunMate puts in the status bar (the thin bar at the bottom of the window).\n\n- `auto`: decides for you. One project: a button for each script. Several projects: a button for each project.\n- `scripts`: always a button for each script.\n- `projects`: always a button for each project. Click it to see the scripts of that project.\n- `picker`: just one \"Scripts\" button that opens the full list.",
+            "enumDescriptions": [
+              "Decide for me (recommended).",
+              "A button for each script.",
+              "A button for each project.",
+              "One \"Scripts\" button."
+            ],
+            "order": 0
+          },
+          "run-mate-script-runner.maxDynamicScriptButtons": {
+            "type": "number",
+            "default": 8,
+            "minimum": 0,
+            "markdownDescription": "How many scripts get their own button in the status bar. The rest stay one click away, behind the `...` button.\n\nExample: with `3`, a project with 10 scripts shows 3 buttons and `... +7`. Set `0` to show only the `...` button.",
+            "order": 1
+          },
+          "run-mate-script-runner.maxProjectButtons": {
+            "type": "number",
+            "default": 4,
+            "minimum": 1,
+            "markdownDescription": "How many projects get their own button when the status bar shows projects. The other projects stay reachable through the `...` button.",
+            "order": 2
+          },
+          "run-mate-script-runner.statusBarSide": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "default": "left",
+            "markdownDescription": "Which end of the status bar the buttons sit on. Try `right` if the left side is crowded.",
+            "enumDescriptions": [
+              "Left end of the status bar.",
+              "Right end of the status bar."
+            ],
+            "order": 3
+          },
           "run-mate-script-runner.useDynamicScriptParsing": {
             "type": "boolean",
             "default": true,
-            "description": "Enable dynamic status bar buttons generated from package.json scripts."
+            "markdownDescription": "Show RunMate buttons in the status bar. Turn this off to hide all buttons; the script list still opens with `Ctrl+Alt+Q`.",
+            "order": 4
+          },
+          "run-mate-script-runner.nestedProjects": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Also look for projects inside subfolders, not only in the folder you opened.\n\nExample: you open `my-app`, and it contains `apps/web/package.json` and `apps/api/package.json`. With this on, RunMate shows `web` and `api` as separate projects and runs their scripts from their own folders.\n\nMonorepo packages listed in `workspaces` (package.json) or in `pnpm-workspace.yaml` are found however deep they are.",
+            "order": 5
+          },
+          "run-mate-script-runner.nestedProjectsMaxDepth": {
+            "type": "number",
+            "default": 3,
+            "minimum": 1,
+            "markdownDescription": "How many folder levels down RunMate searches for projects.\n\nExample: `apps/web` is 2 levels, `apps/web/tools` is 3. Raise the number if a project is not found.",
+            "order": 6
+          },
+          "run-mate-script-runner.nestedProjectsExclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "node_modules",
+              ".git",
+              "dist",
+              "build",
+              "out",
+              "coverage",
+              "vendor",
+              ".next",
+              ".nuxt",
+              ".output",
+              ".turbo",
+              ".cache",
+              ".vercel",
+              ".venv"
+            ],
+            "markdownDescription": "Folder names RunMate never looks into when it searches for projects. Add a folder here if it shows up as a project and should not (for example `examples`).",
+            "order": 7
+          },
+          "run-mate-script-runner.scriptSources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "npm",
+                "deno",
+                "make",
+                "just"
+              ]
+            },
+            "uniqueItems": true,
+            "default": [
+              "npm",
+              "deno",
+              "make",
+              "just"
+            ],
+            "markdownDescription": "Which kinds of runnable things RunMate shows.\n\n- `npm`: the `scripts` in `package.json` (also used for pnpm, Yarn and Bun projects)\n- `deno`: the `tasks` in `deno.json`\n- `make`: the targets in a `Makefile`\n- `just`: the recipes in a `justfile`\n\nRemove an item to stop seeing it. Example: `[\"npm\"]` shows only package.json scripts.",
+            "order": 8
           },
           "run-mate-script-runner.workspaceMode": {
             "type": "string",
@@ -83,7 +266,13 @@
               "all"
             ],
             "default": "first",
-            "description": "How to handle multi-root workspaces when building buttons: first folder, pick per run, or all folders."
+            "markdownDescription": "Only matters if you opened **several folders in one window** (a multi-root workspace). With a single folder, ignore this.\n\n- `first`: read only the first folder.\n- `all`: read every folder.\n- `pick`: read every folder, show a script once even if several projects have it, and ask which project to run it in.",
+            "enumDescriptions": [
+              "Only the first folder.",
+              "Every folder; ask which project when several have the script.",
+              "Every folder."
+            ],
+            "order": 9
           },
           "run-mate-script-runner.excludeScripts": {
             "type": "array",
@@ -95,13 +284,8 @@
               "postinstall",
               "preinstall"
             ],
-            "description": "List of scripts to ignore when generating status bar buttons."
-          },
-          "run-mate-script-runner.maxDynamicScriptButtons": {
-            "type": "number",
-            "default": 8,
-            "minimum": 0,
-            "description": "Maximum number of script buttons shown before collapsing into an overflow menu."
+            "markdownDescription": "Script names RunMate ignores completely: no button, not in the list.\n\nTo only tidy the list, use the eye button in the script list instead. Hidden scripts can be brought back from there; excluded ones only by editing this setting.",
+            "order": 10
           },
           "run-mate-script-runner.scriptOrder": {
             "type": "array",
@@ -115,41 +299,169 @@
               "test",
               "lint"
             ],
-            "description": "Priority order for scripts. Scripts listed here will appear first."
+            "markdownDescription": "The default order of scripts. Names listed here come first, in this order; all other scripts follow alphabetically.\n\nIf you move scripts with the arrow buttons in the script list, your own order wins over this setting.",
+            "order": 11
           },
-          "run-mate-script-runner.reuseTerminalForScripts": {
+          "run-mate-script-runner.shell": {
+            "type": "string",
+            "enum": [
+              "default",
+              "pwsh",
+              "powershell",
+              "cmd",
+              "gitbash",
+              "bash",
+              "zsh",
+              "fish",
+              "sh"
+            ],
+            "default": "default",
+            "markdownDescription": "The shell (terminal program) that runs your scripts.\n\n`default` uses the same shell as a new VS Code terminal. Choose another one if a script only works in a specific shell, for example Git Bash on Windows.\n\nIf the chosen shell is not installed, RunMate uses the default one. You can also choose a shell for a single run from the script list.",
+            "enumDescriptions": [
+              "Same as a new VS Code terminal.",
+              "PowerShell 7 (pwsh).",
+              "Windows PowerShell 5.1 (comes with Windows).",
+              "Command Prompt, cmd.exe (Windows).",
+              "Git Bash (Windows, comes with Git).",
+              "bash (macOS, Linux).",
+              "zsh (macOS, Linux).",
+              "fish (macOS, Linux).",
+              "sh (macOS, Linux)."
+            ],
+            "order": 12
+          },
+          "run-mate-script-runner.nodeVersionManager": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "nvm",
+              "fnm",
+              "volta",
+              "none"
+            ],
+            "default": "auto",
+            "markdownDescription": "Which tool RunMate uses to switch Node.js versions.\n\nA project can ask for a Node version in `.nvmrc`, `.node-version`, `.tool-versions`, `volta.node`, or `engines.node` in `package.json`. If the Node that is active is a different one, RunMate switches to the right one for that run. If it already fits, nothing is switched.\n\n- `auto`: use whichever tool is installed.\n- `nvm`, `fnm`, `volta`: use only this one.\n- `none`: never switch; always use the Node that is active.",
+            "enumDescriptions": [
+              "Use whichever is installed (recommended).",
+              "nvm (macOS, Linux) or nvm for Windows.",
+              "fnm.",
+              "Volta.",
+              "Never switch the Node version."
+            ],
+            "order": 13
+          },
+          "run-mate-script-runner.preflightChecks": {
             "type": "boolean",
             "default": true,
-            "description": "Reuse dedicated terminals per script instead of creating a new terminal each time."
-          },
-          "run-mate-script-runner.askBeforeKill": {
-            "type": "boolean",
-            "default": true,
-            "description": "Ask for confirmation before stopping a running script when re-running from the status bar."
-          },
-          "run-mate-script-runner.alwaysInstallDependencies": {
-            "type": "boolean",
-            "default": false,
-            "description": "Always run install command (npm install, pnpm install, etc.) before running a script."
+            "markdownDescription": "Before a script starts, check that what it needs is installed, and offer to install what is missing: the Node version the project asks for, a Node version manager, or the package manager (pnpm, Yarn, Bun).\n\nRunMate always asks first and shows the command it will run. Turn this off if you never want to be asked.",
+            "order": 14
           },
           "run-mate-script-runner.autoInstallMissingDependencies": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically run install command if node_modules folder is missing."
+            "markdownDescription": "If the dependencies of the project are not installed yet (there is no `node_modules` folder), run the install command first and then the script.\n\nExample: you clone a repository and click `dev`. RunMate runs `npm install` and then `npm run dev`.",
+            "order": 15
+          },
+          "run-mate-script-runner.alwaysInstallDependencies": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Run the install command before **every** script, even when dependencies are already installed. Slower, but you never run with outdated packages.",
+            "order": 16
+          },
+          "run-mate-script-runner.reuseTerminalForScripts": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "On: each script keeps one terminal tab and reuses it on every run. Off: every run opens a new terminal tab.",
+            "order": 17
+          },
+          "run-mate-script-runner.askBeforeKill": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "When you start a script from the list while it is already running, ask whether to restart it or stop it. Off: restart it straight away.",
+            "order": 18
+          },
+          "run-mate-script-runner.checkPorts": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Before starting a dev server, check that its port is free.\n\nExample: you click `dev`, but an old server still sits on port 3000. Instead of a confusing error (or the server quietly moving to port 3001), RunMate tells you which program holds the port and offers to stop it.\n\nRunMate knows the port from `--port 3000` / `-p 3000` / `PORT=3000` in the script or its arguments, from `PORT` in the chosen env file, or from the usual port of the tool (Vite 5173, Next.js 3000, Angular 4200, Astro 4321, Storybook 6006, and others). For anything else, use **Script Ports**.",
+            "order": 19
+          },
+          "run-mate-script-runner.scriptPorts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "default": {},
+            "markdownDescription": "Tell RunMate which port a script uses, when it cannot work it out by itself. The name of the script on the left, the port on the right.\n\nExample: `{ \"dev\": 8080, \"api\": 4000 }`\n\nUsed only by **Check Ports**.",
+            "order": 20
+          },
+          "run-mate-script-runner.notifyOnFailure": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "When a script stops with an error, show a message with **Run again** and **Show terminal** buttons.\n\nThe button of a failed script turns red in any case; this setting is only about the message. Stopping a script yourself is never reported as a failure.",
+            "order": 21
+          },
+          "run-mate-script-runner.envFile": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "An env file whose variables are loaded for **every** script, for example `.env.local`. Empty means none.\n\nThe file is looked for in the folder of each project. A project that does not have it runs as usual.\n\nTo choose an env file for **one** script (for example `dev` with `.env.staging`), open the script list, click the terminal button on its row and choose **Run with an env file...**. That choice wins over this setting.\n\nGood to know: variables from the file are set in the terminal before the script starts, so they override the values your framework reads from its own `.env`.",
+            "order": 22
+          },
+          "run-mate-script-runner.groups": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "scripts"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The text of the group's button."
+                },
+                "scripts": {
+                  "type": "array",
+                  "description": "The scripts that start together.",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "description": "A script of the project in the workspace root, for example \"dev\"."
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "script"
+                        ],
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "description": "Folder of the project, relative to the workspace folder, for example \"apps/web\". Leave out for the root."
+                          },
+                          "script": {
+                            "type": "string",
+                            "description": "Name of the script, for example \"dev\". For other sources add the kind: \"make:build\", \"just:up\", \"deno:start\"."
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "markdownDescription": "Groups of scripts that start with one click, **shared with your team**. Put this in `.vscode/settings.json` of the repository and commit it: everyone who uses RunMate gets the same group buttons.\n\nYou do not have to write this by hand. Make a group in the script list (the **+** button), then click the people icon on the group's row: RunMate writes it here for you.\n\nExample:\n\n```json\n[\n  {\n    \"name\": \"dev all\",\n    \"scripts\": [\n      { \"path\": \"apps/web\", \"script\": \"dev\" },\n      { \"path\": \"apps/api\", \"script\": \"dev\" }\n    ]\n  }\n]\n```",
+            "order": 23
           },
           "run-mate-script-runner.pickerOnly": {
             "type": "boolean",
             "default": false,
-            "description": "Show only a single '$(list-unordered) Scripts' button in the status bar. Clicking it opens the script picker where favorites appear first. No individual script buttons are shown."
-          },
-          "run-mate-script-runner.statusBarSide": {
-            "type": "string",
-            "enum": [
-              "left",
-              "right"
-            ],
-            "default": "left",
-            "description": "Which side of the status bar to place script buttons. Right side is usually less crowded."
+            "markdownDescription": "Old setting. Use **Status Bar Layout** = `picker` instead.",
+            "deprecationMessage": "Use \"run-mate-script-runner.statusBarLayout\": \"picker\" instead.",
+            "order": 24
           }
         }
       }

@@ -1,5 +1,6 @@
 const vscode = require('vscode')
 const { getConfig } = require('./config')
+const { isValidEntry, describeEntry, loadEntries } = require('./entries')
 
 // Per-workspace so that several open VS Code windows don't all fire the same job
 const WORKSPACE_SCHEDULES_KEY = 'terminal-mate.schedules'
@@ -130,8 +131,16 @@ function registerScheduler(context, api) {
       let terminal = vscode.window.terminals.find((term) => term.name === name)
       if (!terminal) terminal = vscode.window.createTerminal({ name, cwd: job.cwd || undefined })
       terminal.show(true)
-      terminal.sendText(job.command)
-      await api.pushHistory(job.title, job.command)
+      if (job.steps?.length > 1) {
+        // A scheduled chain: runs in the background of the tick, stopping at the first failed step
+        for (const step of [...job.steps].reverse()) await api.pushHistory(`${job.title} › ${step.title}`, step.command, job.cwd)
+        api.runSequence(terminal, job.steps, job.title).catch((error) =>
+          vscode.window.showErrorMessage(`TerminalMate: Scheduled "${job.title}" failed: ${error.message}`)
+        )
+      } else {
+        terminal.sendText(job.command)
+        await api.pushHistory(job.title, job.command, job.cwd)
+      }
       if (job.repeat === 'once') {
         vscode.window.showInformationMessage(`TerminalMate: Ran scheduled command "${job.title}".`)
       } else {
@@ -193,12 +202,10 @@ function registerScheduler(context, api) {
   }
 
   const pickEntry = async () => {
-    const entries = (getConfig().get('customTerminals', []) || []).filter(
-      (entry) => entry && typeof entry.title === 'string' && typeof entry.command === 'string' && entry.title.trim() && entry.command.trim()
-    )
+    const entries = loadEntries().filter((entry) => isValidEntry(entry) && !entry.archived)
     const oneOffItem = { label: '$(edit) Type a one-off command', alwaysShow: true }
     const picked = await vscode.window.showQuickPick(
-      [oneOffItem, ...entries.map((entry) => ({ label: entry.title.trim(), description: entry.command.trim(), entry }))],
+      [oneOffItem, ...entries.map((entry) => ({ label: entry.title.trim(), description: describeEntry(entry), entry }))],
       { placeHolder: 'Select a command to schedule' }
     )
     if (!picked) return null
@@ -221,7 +228,7 @@ function registerScheduler(context, api) {
 
   const scheduleCommand = vscode.commands.registerCommand('terminal-mate.scheduleCommand', async (entryArg) => {
     try {
-      const entry = entryArg && entryArg.command ? entryArg : await pickEntry()
+      const entry = isValidEntry(entryArg) ? entryArg : await pickEntry()
       if (!entry) return
 
       const when = await vscode.window.showInputBox({
@@ -238,17 +245,25 @@ function registerScheduler(context, api) {
 
       // Placeholders and confirmations are resolved now: nobody may be around when it fires
       const folder = api.getActiveFolder()
-      const { result, cursorSymbol } = await api.resolvePlaceholders(entry.command.trim(), folder)
-      if (result.includes(cursorSymbol)) {
+      const steps = await api.resolveSteps(entry, folder)
+      if (!steps.length) {
+        vscode.window.showWarningMessage(`TerminalMate: "${entry.title}" has no steps for this operating system.`)
+        return
+      }
+      if (steps.some((step) => step.hasCursor)) {
         vscode.window.showWarningMessage('TerminalMate: Snippets with a cursor marker cannot be scheduled.')
         return
       }
-      if (!(await api.confirmDangerousIfNeeded(result))) return
+      for (const step of steps) {
+        if (!(await api.confirmDangerousIfNeeded(step.command))) return
+      }
 
       const job = {
         id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         title: entry.title.trim(),
-        command: result,
+        // "command" is what the list shows; a chain also keeps its separate steps
+        command: steps.map((step) => step.command).join(' → '),
+        ...(steps.length > 1 ? { steps: steps.map(({ title, command }) => ({ title, command })) } : {}),
         cwd: entry.cwd || folder?.uri?.fsPath || null,
         ...schedule,
         // Re-parse on the final value so the "now" reference is the moment of saving

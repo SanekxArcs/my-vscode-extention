@@ -9,6 +9,9 @@ test/
 .prettierrc
 *.md
 !README.md
+!CHANGELOG.md
+!walkthrough/*.md
+images/
 screenshot.png
 screenshots/
 .DS_Store

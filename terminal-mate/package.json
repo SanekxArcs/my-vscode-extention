@@ -2,20 +2,21 @@
   "name": "terminal-mate",
   "displayName": "TerminalMate",
   "description": "Custom command snippets, history, and status bar shortcuts for terminal workflows. Automate repetitive shell commands with intelligent placeholders.",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "publisher": "SanekxArcs",
   "license": "MIT",
   "icon": "icon-128.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SanekxArcs/my-vscode-extention/tree/main/git-terminal"
+    "url": "https://github.com/SanekxArcs/my-vscode-extention.git",
+    "directory": "terminal-mate"
   },
-  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/git-terminal/README.md",
+  "homepage": "https://github.com/SanekxArcs/my-vscode-extention/blob/main/terminal-mate/README.md",
   "bugs": {
     "url": "https://github.com/SanekxArcs/my-vscode-extention/issues"
   },
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.64.0"
   },
   "categories": [
     "Other"
@@ -36,7 +37,10 @@
     "onCommand:terminal-mate.finishSnippet",
     "onCommand:terminal-mate.scheduleCommand",
     "onCommand:terminal-mate.scheduledCommands",
-    "onCommand:terminal-mate.history"
+    "onCommand:terminal-mate.history",
+    "onCommand:terminal-mate.run",
+    "onCommand:terminal-mate.importCommands",
+    "onCommand:terminal-mate.exportCommands"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -64,6 +68,14 @@
       {
         "command": "terminal-mate.scheduledCommands",
         "title": "TerminalMate: Scheduled Commands"
+      },
+      {
+        "command": "terminal-mate.importCommands",
+        "title": "TerminalMate: Import Commands"
+      },
+      {
+        "command": "terminal-mate.exportCommands",
+        "title": "TerminalMate: Export Commands"
       }
     ],
     "configuration": [
@@ -72,18 +84,17 @@
         "properties": {
           "terminal-mate.customTerminals": {
             "type": "array",
-            "markdownDescription": "Custom terminal commands to appear as Status Bar buttons. Each item must have a title and command. Example:\n```json\n{\n  \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\"\n}\n```",
+            "markdownDescription": "Your saved commands. Each item needs a `title` and either a `command` or a `chain`. Example:\n```json\n{\n  \"title\": \"amend\", \"command\": \"git commit --amend --no-verify\"\n}\n```",
             "default": [],
             "items": {
               "type": "object",
               "required": [
-                "title",
-                "command"
+                "title"
               ],
               "properties": {
                 "title": {
                   "type": "string",
-                  "description": "Status bar button title and terminal name"
+                  "description": "Label in the menu and name of the terminal. Chains and keybindings refer to a command by this title."
                 },
                 "command": {
                   "type": "string",
@@ -103,14 +114,56 @@
                     "array"
                   ],
                   "description": "Limit snippet to specific operating systems (win32|darwin|linux)"
+                },
+                "chain": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Use instead of \"command\": titles of saved commands to run one after another in the same terminal. The chain stops at the first step that fails."
+                },
+                "group": {
+                  "type": "string",
+                  "description": "Group name. Commands with the same group are shown together under a heading in the menu."
+                },
+                "archived": {
+                  "type": "boolean",
+                  "description": "Hide this command from the main list. Archived commands stay available under the Archive item at the bottom."
                 }
-              }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "command"
+                  ]
+                },
+                {
+                  "required": [
+                    "chain"
+                  ]
+                }
+              ]
             }
           },
           "terminal-mate.customTerminalsButtonLabel": {
             "type": "string",
             "default": "TM",
             "description": "Status Bar button label that opens the saved custom commands Quick Pick"
+          },
+          "terminal-mate.sortCommands": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "recent",
+              "frequent"
+            ],
+            "enumDescriptions": [
+              "Your own order, changed with the Move up / Move down buttons",
+              "Most recently used first",
+              "Most often used first"
+            ],
+            "default": "manual",
+            "description": "Order of commands in the menu (applied inside each group)"
           },
           "terminal-mate.cursorSymbol": {
             "type": "string",
@@ -135,7 +188,19 @@
           "terminal-mate.confirmDangerousCommands": {
             "type": "boolean",
             "default": true,
-            "description": "Ask for confirmation before running git reset, clean, or force push"
+            "description": "Ask for confirmation before running a command that matches one of the dangerous command patterns"
+          },
+          "terminal-mate.dangerousCommandPatterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "gits+resets+--hard",
+              "gits+clean[sS]*(-fd|--force)",
+              "gits+push[sS]*s(-f|--force)(s|$)"
+            ],
+            "markdownDescription": "Regular expressions (case-insensitive) for commands that need confirmation before they run. Add your own, for example `rms+-rf` or `drops+database`."
           },
           "terminal-mate.pinLastCustomTerminal": {
             "type": "boolean",

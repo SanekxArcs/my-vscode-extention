@@ -2,6 +2,30 @@
 
 All notable changes to the **TerminalMate** extension will be documented in this file.
 
+## [1.5.0] - 2026-11-17
+
+### Added
+
+- Archive: the archive button next to a saved command hides it from the main list without deleting it. `Archive (N)` at the bottom of the list opens archived commands, where each one can be restored or deleted.
+- Groups: give commands a `group` and they are shown together under a heading.
+- Chains: a saved entry that runs several saved commands one after another and stops at the first one that fails (`Add new chain` in the menu).
+- Keyboard shortcuts for single commands through the `terminal-mate.run` command.
+- `TerminalMate: Import Commands` and `TerminalMate: Export Commands` to share a command list as a JSON file.
+- `terminal-mate.sortCommands` setting: keep your own order, or show the most recent or most used commands first.
+- `terminal-mate.dangerousCommandPatterns` setting: choose which commands ask for confirmation.
+- The edit button now opens a menu: title, command, working directory, group, duplicate, keyboard shortcut, open in settings.json.
+
+### Fixed
+
+- Re-running a command from History now asks for confirmation on dangerous commands and uses the original working directory.
+- `TerminalMate: Open Saved Commands` now works when the status bar button is hidden or no commands are saved yet, and the status bar button is shown before the first command is added.
+- The pinned last command now keeps its working directory.
+- Repository and homepage links pointed to a folder that no longer exists.
+
+### Changed
+
+- Requires VS Code 1.64 or newer.
+
 ## [1.4.1] - 2026-09-30
 
 - Added ↑/↓ buttons next to each saved command to reorder the list without closing the picker.
